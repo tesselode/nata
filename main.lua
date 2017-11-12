@@ -31,15 +31,28 @@ drawSystem = {
     end
 }
 
-pool = nata.new {
-    startPositionSystem,
-    horizontalMovementSystem,
-    verticalMovementSystem,
-    nata.oop(),
-    drawSystem,
+spawnSystem = {
+    filter = function(e) return e.spawn end,
+    update = function(e, dt)
+        if love.math.random(100) == 1 then
+            pool:add {z = love.math.random(), radius = love.math.random(64), xspeed = love.math.random(10), color = {love.math.random(255), love.math.random(255), love.math.random(255)}}
+        end
+    end
 }
 
-pool:add {z = 1, radius = 32, xspeed = 1, color = {150, 150, 150}}
+pool = nata.new {
+    systems = {
+        spawnSystem,
+        startPositionSystem,
+        horizontalMovementSystem,
+        verticalMovementSystem,
+        nata.oop(),
+        drawSystem,
+    },
+    allowQueueing = true,
+}
+
+pool:add {z = 1, radius = 32, xspeed = 1, color = {150, 150, 150}, spawn = true}
 pool:add {z = 2, radius = 32, xspeed = 2, color = {200, 100, 150}}
 pool:add {z = 3, radius = 32, xspeed = 3, yspeed = .1, color = {100, 200, 150}}
 pool:add {z = 4, radius = 32, xspeed = 4, yspeed = .2, color = {100, 150, 200}}
@@ -63,6 +76,12 @@ function love.update(dt)
     updates = updates + 1
 end
 
+function love.keypressed(key)
+    if key == 'return' then
+        pool:addQueuedEntities()
+    end
+end
+
 function love.draw()
     local t = love.timer.getTime()
     pool:sort(function(a, b) return a.z > b.z end)
@@ -74,4 +93,5 @@ function love.draw()
     love.graphics.print('Average update time (us): ' .. (math.floor((updateTime/updates)*1000000)), 0, 0)
     love.graphics.print('Average draw time (us): ' .. (math.floor((drawTime/draws)*1000000)), 0, 16)
     love.graphics.print('Memory usage (kb): ' .. math.floor(collectgarbage 'count'), 0, 32)
+    love.graphics.print('Queued entities: ' .. #pool._queue, 0, 48)
 end

@@ -18,17 +18,31 @@ function Pool:callOn(entity, event, ...)
 end
 
 function Pool:call(event, ...)
+	self._calling = true
 	for _, system in ipairs(self.systems) do
 		for _, entity in ipairs(self._entities) do
 			self:callSystemOn(system, entity, event, ...)
 		end
 	end
+	self._calling = false
 end
 
 function Pool:add(entity, ...)
-	self:callOn(entity, 'add', ...)
-	table.insert(self._entities, entity)
+	if self.allowQueueing and self._calling then
+		table.insert(self._queue, {entity, {...}})
+	else
+		self:callOn(entity, 'add', ...)
+		table.insert(self._entities, entity)
+	end
 	return entity
+end
+
+function Pool:addQueuedEntities()
+	assert(not self._calling)
+	for i, entity in ipairs(self._queue) do
+		self:add(entity[1], unpack(entity[2]))
+		self._queue[i] = nil
+	end
 end
 
 function Pool:remove(f, ...)
@@ -72,10 +86,13 @@ function nata.oop()
 	})
 end
 
-function nata.new(systems)
+function nata.new(config)
 	return setmetatable({
+		systems = config and config.systems or {nata.oop()},
+		allowQueueing = config and config.allowQueueing,
 		_entities = {},
-		systems = systems or {nata.oop},
+		_calling = false,
+		_queue = {},
 	}, {__index = Pool})
 end
 
