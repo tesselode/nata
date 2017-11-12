@@ -4,10 +4,8 @@ local Pool = {}
 Pool.__index = Pool
 
 function Pool:callSystemOn(system, entity, event, ...)
-	if not system.filter or system.filter(entity) then
-		if system[event] then 
-			system[event](entity, ...)
-		end
+	if system[event] and (not system.filter or system.filter(entity)) then
+		system[event](entity, ...)
 	end
 end
 
@@ -73,11 +71,9 @@ function nata.oop()
 			if k == '_f' or k == 'filter' then
 				return rawget(t, k)
 			else
-				if not t._f[k] then
-					t._f[k] = function(e, ...)
-						if type(e[k]) == 'function' then
-							e[k](e, ...)
-						end
+				t._f[k] = t._f[k] or function(e, ...)
+					if type(e[k]) == 'function' then
+						e[k](e, ...)
 					end
 				end
 				return t._f[k]
