@@ -35,7 +35,7 @@ pool = nata.new {
     startPositionSystem,
     horizontalMovementSystem,
     verticalMovementSystem,
-    nata.oop,
+    nata.oop(),
     drawSystem,
 }
 

@@ -53,22 +53,24 @@ end
 
 function Pool:sort(f) table.sort(self._entities, f) end
 
-nata.oop = setmetatable({_f = {}}, {
-	__index = function(t, k)
-		if k == '_f' or k == 'filter' then
-			return rawget(t, k)
-		else
-			if not t._f[k] then
-				t._f[k] = function(e, ...)
-					if type(e[k]) == 'function' then
-						e[k](e, ...)
+function nata.oop()
+	return setmetatable({_f = {}}, {
+		__index = function(t, k)
+			if k == '_f' or k == 'filter' then
+				return rawget(t, k)
+			else
+				if not t._f[k] then
+					t._f[k] = function(e, ...)
+						if type(e[k]) == 'function' then
+							e[k](e, ...)
+						end
 					end
 				end
+				return t._f[k]
 			end
-			return t._f[k]
 		end
-	end
-})
+	})
+end
 
 function nata.new(systems)
 	return setmetatable({
