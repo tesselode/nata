@@ -35,28 +35,25 @@ spawnSystem = {
     filter = function(e) return e.spawn end,
     update = function(e, dt)
         if love.math.random(100) == 1 then
-            pool:add {z = love.math.random(), radius = love.math.random(64), xspeed = love.math.random(10), color = {love.math.random(255), love.math.random(255), love.math.random(255)}}
+            pool:queue {z = love.math.random(), radius = love.math.random(64), xspeed = love.math.random(10), color = {love.math.random(255), love.math.random(255), love.math.random(255)}}
         end
     end
 }
 
 pool = nata.new {
-    systems = {
-        spawnSystem,
-        startPositionSystem,
-        horizontalMovementSystem,
-        verticalMovementSystem,
-        nata.oop(),
-        drawSystem,
-    },
-    allowQueueing = true,
+    spawnSystem,
+    startPositionSystem,
+    horizontalMovementSystem,
+    verticalMovementSystem,
+    nata.oop(),
+    drawSystem,
 }
 
-pool:add {z = 1, radius = 32, xspeed = 1, color = {150, 150, 150}, spawn = true}
-pool:add {z = 2, radius = 32, xspeed = 2, color = {200, 100, 150}}
-pool:add {z = 3, radius = 32, xspeed = 3, yspeed = .1, color = {100, 200, 150}}
-pool:add {z = 4, radius = 32, xspeed = 4, yspeed = .2, color = {100, 150, 200}}
-pool:add {z = 5, radius = 32, xspeed = 5, color = {150, 200, 100},
+pool:queue {z = 1, radius = 32, xspeed = 1, color = {150, 150, 150}, spawn = true}
+pool:queue {z = 2, radius = 32, xspeed = 2, color = {200, 100, 150}}
+pool:queue {z = 3, radius = 32, xspeed = 3, yspeed = .1, color = {100, 200, 150}}
+pool:queue {z = 4, radius = 32, xspeed = 4, yspeed = .2, color = {100, 150, 200}}
+pool:queue {z = 5, radius = 32, xspeed = 5, color = {150, 200, 100},
     update = function(e, dt)
         e.radius = 32 + 16 * math.sin(uptime)
     end
@@ -78,7 +75,7 @@ end
 
 function love.keypressed(key)
     if key == 'return' then
-        pool:addQueuedEntities()
+        pool:flush()
     end
 end
 
