@@ -1,8 +1,6 @@
 # Nata
 **Nata** is a library for LÖVE that creates entity pools. It can be used in either a traditional OOP style or a simple ECS style.
 
-See the demos folder for some examples - the shooter example uses OOP, while the platformer example uses ECS.
-
 ## Installation
 To use Nata, place `nata.lua` in your project, and then add this code to your `main.lua`:
 ```lua
@@ -17,11 +15,16 @@ nata = require 'path.to.nata' -- if it's in subfolders
 pool = nata.new()
 ```
 
-### Adding an entity to the pool
+### Queueing entities to be added to the pool
 ```lua
-entity = pool:add(entity)
+entity = pool:queue(entity, ...)
 ```
-Adds an entity to the pool and returns the entity.
+Adds an entity to the queue and returns it. Any additional arguments will be passed to `entity.add` when it is added.
+
+### Adding queued entities
+```lua
+pool:flush()
+```
 
 ### Calling an event for all entities
 ```lua
@@ -32,6 +35,11 @@ For each entity, this will run `entity:[event](...)` if the entity has a functio
 ### Calling an event for a single entity
 ```lua
 pool:callOn(entity, event, ...)
+```
+
+### Calling a single system on an entity
+```lua
+pool:callSystemOn(system, entity, event, ...)
 ```
 
 ### Getting entities
