@@ -9,6 +9,12 @@ function Pool:callSystemOn(system, entity, event, ...)
 	end
 end
 
+function Pool:callSystem(system, event, ...)
+	for _, entity in ipairs(self._entities) do
+		self:callSystemOn(system, entity, event, ...)
+	end
+end
+
 function Pool:callOn(entity, event, ...)
 	for _, system in ipairs(self.systems) do
 		self:callSystemOn(system, entity, event, ...)
@@ -17,9 +23,7 @@ end
 
 function Pool:call(event, ...)
 	for _, system in ipairs(self.systems) do
-		for _, entity in ipairs(self._entities) do
-			self:callSystemOn(system, entity, event, ...)
-		end
+		self:callSystem(system, event, ...)
 	end
 end
 

@@ -37,6 +37,11 @@ For each entity, this will run `entity:[event](...)` if the entity has a functio
 pool:callOn(entity, event, ...)
 ```
 
+### Calling a single system on all entities
+```lua
+pool:callSystem(system, event, ...)
+```
+
 ### Calling a single system on an entity
 ```lua
 pool:callSystemOn(system, entity, event, ...)
