@@ -1,5 +1,7 @@
 # Nata
-**Nata** is a library for LÖVE that creates entity pools. It can be used in either a traditional OOP style or a simple ECS style.
+**Nata** is an entity management library for LÖVE. It can be used in a traditional OOP style or a minimal ECS style.
+
+Nata lets you create **entity pools**, which hold all of the objects in your game world, such as platforms, enemies, and collectables.
 
 ## Installation
 To use Nata, place `nata.lua` in your project, and then add this code to your `main.lua`:
@@ -9,22 +11,25 @@ nata = require 'path.to.nata' -- if it's in subfolders
 ```
 
 ## Usage - OOP style
+In the traditional OOP (object oriented programming) style, an entity is a table that contains both **data** and **functions**. For example, a player entity may have `x` and `y` variables for position, as well as functions such as `jump`. Generally, all entities will have some of the same functions, such as `update` or `draw`, which contain behavior unique to that entity.
 
 ### Creating an entity pool
 ```lua
 pool = nata.new()
 ```
+Creates a pool which holds entities.
 
 ### Queueing entities to be added to the pool
 ```lua
 entity = pool:queue(entity, ...)
 ```
-Adds an entity to the queue and returns it. Any additional arguments will be passed to `entity.add` when it is added.
+Adds an entity to the queue and returns it. Additional arguments are stored to be passed to `entity.add` when the queue is flushed.
 
 ### Adding queued entities
 ```lua
 pool:flush()
 ```
+Adds all of the entities in the queue to the pool. For each entity, `entity:add(...)` will be called (if it exists), where `...` is the arguments passed to `pool.queue`.
 
 ### Calling an event for all entities
 ```lua
@@ -35,16 +40,6 @@ For each entity, this will run `entity:[event](...)` if the entity has a functio
 ### Calling an event for a single entity
 ```lua
 pool:callOn(entity, event, ...)
-```
-
-### Calling a single system on all entities
-```lua
-pool:callSystem(system, event, ...)
-```
-
-### Calling a single system on an entity
-```lua
-pool:callSystemOn(system, entity, event, ...)
 ```
 
 ### Getting entities
@@ -63,7 +58,7 @@ If no function is provided, `pool:get()` will return every entity.
 ```lua
 pool:sort(f)
 ```
-Sorts the entities according to the function `f`. This works just like `table.sort`.
+Sorts the entities according to the function `f`. This works just like Lua's `table.sort`.
 
 ### Removing entities
 ```lua
@@ -72,7 +67,9 @@ pool:remove(f)
 Removes all the entities for which `f(entity)` returns true and calls the "remove" event on each entity that is removed.
 
 ## Usage - ECS style
-ECS style is almost exactly the same as OOP style, except you pass a list of systems to nata.
+While object oriented programming is a powerful metaphor, the **Entity Component System** pattern can offer greater flexibility and avoid some of the problems with inheritance. With ECS, entities primarily contain **data** rather than functions, and systems act on entities depending on what components they have.
+
+Using Nata in the ECS style is almost exactly the same as using it in the OOP style, except you pass a list of systems to `nata.new`.
 ```lua
 pool = nata.new(systems)
 ```
@@ -87,7 +84,19 @@ GravitySystem = {
   end,
 }
 ```
-Nata's OOP functionality is implemented as a single system that passes every event (except for "filter" and "add") to the entity. If you want to use this system in combination with other systems, add `nata.oop` to the `systems` table.
+Nata's OOP functionality is implemented as a single system that passes every event (except for "filter") to the entity. If you want to use this system in combination with other systems, add `nata.oop` to the `systems` table.
+
+Nata also has functions that are only applicable when using multiple systems:
+
+### Calling a single system on all entities
+```lua
+pool:callSystem(system, event, ...)
+```
+
+### Calling a single system on an entity
+```lua
+pool:callSystemOn(system, entity, event, ...)
+```
 
 ## Contributing
 This library is in very early development. Feel free to make suggestions about the design. Issues and pull requests are always welcome.
