@@ -104,7 +104,7 @@ This library is in very early development. Feel free to make suggestions about t
 ## License
 MIT License
 
-Copyright (c) 2017 Andrew Minnich
+Copyright (c) 2018 Andrew Minnich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
