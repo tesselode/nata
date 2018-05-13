@@ -73,7 +73,7 @@ Using Nata in the ECS style is almost exactly the same as using it in the OOP st
 ```lua
 pool = nata.new(systems)
 ```
-Each system is a table with an optional filter function and a function for each event it should respond to. Each event function will receive an entity first, followed by any additional arguments passed to `pool.call`, `pool.callOn`, `pool.add`, or `pool.remove`. For example, a gravity system might look like this:
+Each system is a table with an optional filter function and a function for each event it should respond to. Each event function will receive an entity as the first argument, followed by any additional arguments passed to `pool.call`, `pool.callOn`, `pool.add`, or `pool.remove`. For example, a gravity system might look like this:
 ```lua
 GravitySystem = {
   filter = function(entity)
@@ -84,7 +84,7 @@ GravitySystem = {
   end,
 }
 ```
-Nata's OOP functionality is implemented as a single system that passes every event (except for "filter") to the entity. If you want to use this system in combination with other systems, add `nata.oop` to the `systems` table.
+Nata's OOP functionality is implemented as a single system that passes every event (except for "filter") to the entity. If you want to use this system in combination with other systems, add `nata.oop()` to the `systems` table.
 
 Nata also has functions that are only applicable when using multiple systems:
 
