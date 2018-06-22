@@ -3,6 +3,7 @@ local Enemy2 = require 'entity.enemy2'
 local Enemy3 = require 'entity.enemy3'
 local nata = require 'lib.nata'
 local Player = require 'entity.player'
+local prof = require 'lib.jprof'
 local timer = require 'lib.timer'
 
 local game = {}
@@ -37,17 +38,27 @@ function game:enter()
 end
 
 function game:update(dt)
+	prof.push 'frame'
+	prof.push 'update'
 	self.spawnSpeed = self.spawnSpeed + .01 * dt
 	self.timer:update(dt * self.spawnSpeed)
+	prof.push 'flush'
 	self.entities:flush()
+	prof.pop 'flush'
+	prof.push 'call update'
 	self.entities:call('update', dt)
+	prof.pop 'call update'
+	prof.push 'remove'
 	self.entities:remove(function(entity) return entity.dead end)
+	prof.pop 'remove'
+	prof.pop 'update'
 end
 
 function game:draw()
+	prof.push 'draw'
 	self.entities:call 'draw'
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.print(love.timer.getFPS())
+	prof.pop 'draw'
+	prof.pop 'frame'
 end
 
 return game
