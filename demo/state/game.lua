@@ -33,7 +33,7 @@ function game:enter()
 			self.entities:queue(Enemy3(self.entities, 50 + love.math.random(700), -50))
 		end)
 	end)
-	self.spawnSpeed = 10
+	self.spawnSpeed = 1
 end
 
 function game:update(dt)
