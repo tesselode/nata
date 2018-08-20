@@ -81,6 +81,11 @@ local function sort(t, f)
 	end
 end
 
+local function size(t)
+	local holes = t._holes and #t._holes or 0
+	return #t - holes
+end
+
 local function shouldSystemProcess(system, entity)
 	if not system.filter then return true
 	elseif type(system.filter) == 'table' then
@@ -162,6 +167,10 @@ function Pool:get(f)
 		end
 	end
 	return entities
+end
+
+function Pool:getSize()
+	return size(self._entities)
 end
 
 function nata.oop()

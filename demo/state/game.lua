@@ -47,7 +47,7 @@ end
 function game:draw()
 	self.entities:call 'draw'
 	love.graphics.setColor(1, 1, 1)
-	love.graphics.print(love.timer.getFPS())
+	love.graphics.print('Entities: ' .. self.entities:getSize())
 end
 
 return game

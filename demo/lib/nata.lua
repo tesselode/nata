@@ -67,6 +67,39 @@ local function iterate(t)
 	end
 end
 
+local function sort(t, f)
+	table.sort(t, function(a, b)
+		if a == empty then return false end
+		if b == empty then return true end
+		return f(a, b)
+	end)
+	if t._holes then
+		for i = #t._holes, 1, -1 do
+			t[t._holes[i]] = nil
+			t._holes[i] = nil
+		end
+	end
+end
+
+local function size(t)
+	local holes = t._holes and #t._holes or 0
+	return #t - holes
+end
+
+local function shouldSystemProcess(system, entity)
+	if not system.filter then return true
+	elseif type(system.filter) == 'table' then
+		for _, component in ipairs(system.filter) do
+			if not entity[component] then return false end
+		end
+		return true
+	elseif type(system.filter) == 'function' then
+		return system.filter(entity)
+	else
+		error 'system filter is an invalid type'
+	end
+end
+
 local Pool = {}
 Pool.__index = Pool
 
@@ -98,9 +131,12 @@ function Pool:flush()
 		local entity, args = v[1], v[2]
 		insert(self._entities, entity)
 		for system in iterate(self.systems) do
-			if not system.filter or system.filter(entity) then
+			if shouldSystemProcess(system, entity) then
 				self._cache[system] = self._cache[system] or {}
 				insert(self._cache[system], entity)
+				if system.sort then
+					sort(self._cache[system], system.sort)
+				end
 				if system.add then system.add(entity, args) end
 			end
 		end
@@ -133,10 +169,14 @@ function Pool:get(f)
 	return entities
 end
 
+function Pool:getSize()
+	return size(self._entities)
+end
+
 function nata.oop()
 	return setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == '_f' or k == 'filter' then
+			if k == '_f' or k == 'filter' or k == 'sort' then
 				return rawget(t, k)
 			else
 				t._f[k] = t._f[k] or function(e, ...)
