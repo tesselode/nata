@@ -30,27 +30,21 @@ local nata = {
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:callSystemOn(system, entity, event, ...)
-	if system[event] and (not system.filter or system.filter(entity)) then
-		system[event](entity, ...)
-	end
-end
-
-function Pool:callSystem(system, event, ...)
-	for _, entity in ipairs(self._entities) do
-		self:callSystemOn(system, entity, event, ...)
-	end
-end
-
 function Pool:callOn(entity, event, ...)
 	for _, system in ipairs(self.systems) do
-		self:callSystemOn(system, entity, event, ...)
+		if system[event] and (not system.filter or system.filter(entity)) then
+			system[event](entity, ...)
+		end
 	end
 end
 
 function Pool:call(event, ...)
 	for _, system in ipairs(self.systems) do
-		self:callSystem(system, event, ...)
+		for _, entity in ipairs(self._entities) do
+			if system[event] and (not system.filter or system.filter(entity)) then
+				system[event](entity, ...)
+			end
+		end
 	end
 end
 
