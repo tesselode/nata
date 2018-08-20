@@ -54,17 +54,17 @@ end)
 ```
 If no function is provided, `pool:get()` will return every entity.
 
-### Sorting entities
-```lua
-pool:sort(f)
-```
-Sorts the entities according to the function `f`. This works just like Lua's `table.sort`.
-
 ### Removing entities
 ```lua
 pool:remove(f)
 ```
 Removes all the entities for which `f(entity)` returns true and calls the "remove" event on each entity that is removed.
+
+### Getting the number of entities in the pool
+```lua
+size = pool:getSize()
+```
+Returns the number of entities in the pool. Useful for profiling and debugging.
 
 ## Usage - ECS style
 While object oriented programming is a powerful metaphor, the **Entity Component System** pattern can offer greater flexibility and avoid some of the problems with inheritance. With ECS, entities primarily contain **data** rather than functions, and systems act on entities depending on what components they have.
@@ -73,30 +73,53 @@ Using Nata in the ECS style is almost exactly the same as using it in the OOP st
 ```lua
 pool = nata.new(systems)
 ```
-Each system is a table with an optional filter function and a function for each event it should respond to. Each event function will receive an entity as the first argument, followed by any additional arguments passed to `pool.call`, `pool.callOn`, `pool.add`, or `pool.remove`. For example, a gravity system might look like this:
+Each system is a table with an optional filter, an optional sort function, and a function for each event it should respond to. Each event function will receive an entity as the first argument, followed by any additional arguments passed to `pool.call`, `pool.callOn`, `pool.add`, or `pool.remove`. For example, a gravity system might look like this:
 ```lua
 GravitySystem = {
-  filter = function(entity)
-    return entity.vy and entity.gravity
-  end,
+  filter = {'vy', 'gravity'}
   update = function(entity, dt)
     entity.vy = entity.vy + entity.gravity * dt
   end,
 }
 ```
-Nata's OOP functionality is implemented as a single system that passes every event (except for "filter") to the entity. If you want to use this system in combination with other systems, add `nata.oop()` to the `systems` table.
 
-Nata also has functions that are only applicable when using multiple systems:
+### Filters
+Systems can optionally have a filter that defines which entities a system should act on. Filters can either be defined as a table or a function.
 
-### Calling a single system on all entities
+When `system.filter` is a table, the system will act on any entity that has all of the keys defined in the table. For example, this system will only act on entities that have `vx` and `vy` defined.
+
 ```lua
-pool:callSystem(system, event, ...)
+VelocitySystem = {
+  filter = {'vx', 'vy'},
+  update = function(entity, dt)
+    entity.x = entity.x + entity.vx * dt
+    entity.y = entity.y + entity.vy * dt
+  end
+}
 ```
 
-### Calling a single system on an entity
+When `system.filter` is a function, the system will only on entities for which `f(entity)` returns true. For example, this system will only act on entities that have a `vx` and `vy` of 10 or greater.
+
 ```lua
-pool:callSystemOn(system, entity, event, ...)
+FrictionSystem = {
+  filter = function(entity)
+    return entity.vx > 10 and entity.vy > 10
+  end,
+  update = function(entity, dt)
+    entity.vx = entity.vx + (0 - entity.vx) * 10 * dt
+    entity.vy = entity.vy + (0 - entity.vy) * 10 * dt
+  end
+}
 ```
+
+### Sorting
+By default, each system will process entities in the order they were added to the pool. You can change the order each system processes entities by defining the function `system.sort`. The function should take two arguments representing two entities and return true if the first entity should be processed before the second entity.
+
+Note that entities are only sorted when they are first added; the order of processing will not change otherwise.
+
+### Hybrid OOP/ECS style
+
+Nata's OOP functionality is implemented as a single system that passes every event (except for "filter" and "sort") to the entity. If you want to use this system in combination with other systems, add `nata.oop()` to the `systems` table.
 
 ## Contributing
 This library is in very early development. Feel free to make suggestions about the design. Issues and pull requests are always welcome.

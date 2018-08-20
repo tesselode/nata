@@ -27,44 +27,120 @@ local nata = {
 	]]
 }
 
+local empty = {}
+
+local function insert(t, v)
+	assert(t, 'no table specified')
+	assert(v, 'no value specified')
+	local position = #t + 1
+	if t._holes and #t._holes > 0 then
+		position = t._holes[1]
+		table.remove(t._holes, 1)
+	end
+	t[position] = v
+	t[v] = position
+end
+
+local function remove(t, v)
+	assert(t, 'no table specified')
+	assert(v, 'no value specified')
+	assert(t[v], 'trying to remove element that isn\'t in table')
+	local position = t[v]
+	if position < #t then
+		t[position] = empty
+		t._holes = t._holes or {}
+		table.insert(t._holes, position)
+	else
+		t[position] = nil
+	end
+	t[v] = nil
+end
+
+local function iterate(t)
+	assert(t, 'no table specified')
+	local i = 0
+	return function()
+		while i < #t do
+			i = i + 1
+			if t[i] ~= empty then return t[i] end
+		end
+	end
+end
+
+local function sort(t, f)
+	table.sort(t, function(a, b)
+		if a == empty then return false end
+		if b == empty then return true end
+		return f(a, b)
+	end)
+	if t._holes then
+		for i = #t._holes, 1, -1 do
+			t[t._holes[i]] = nil
+			t._holes[i] = nil
+		end
+	end
+end
+
+local function size(t)
+	local holes = t._holes and #t._holes or 0
+	return #t - holes
+end
+
+local function shouldSystemProcess(system, entity)
+	if not system.filter then return true
+	elseif type(system.filter) == 'table' then
+		for _, component in ipairs(system.filter) do
+			if not entity[component] then return false end
+		end
+		return true
+	elseif type(system.filter) == 'function' then
+		return system.filter(entity)
+	else
+		error 'system filter is an invalid type'
+	end
+end
+
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:callSystemOn(system, entity, event, ...)
-	if system[event] and (not system.filter or system.filter(entity)) then
-		system[event](entity, ...)
-	end
-end
-
-function Pool:callSystem(system, event, ...)
-	for _, entity in ipairs(self._entities) do
-		self:callSystemOn(system, entity, event, ...)
-	end
-end
-
 function Pool:callOn(entity, event, ...)
-	for _, system in ipairs(self.systems) do
-		self:callSystemOn(system, entity, event, ...)
+	for system in iterate(self.systems) do
+		if system[event] and self._cache[system][entity] then
+			system[event](entity, ...)
+		end
 	end
 end
 
 function Pool:call(event, ...)
 	for _, system in ipairs(self.systems) do
-		self:callSystem(system, event, ...)
+		if system[event] then
+			for entity in iterate(self._cache[system]) do
+				system[event](entity, ...)
+			end
+		end
 	end
 end
 
 function Pool:queue(entity, ...)
-	table.insert(self._queue, {entity, {...}})
+	insert(self._queue, {entity, {...}})
 	return entity
 end
 
 function Pool:flush()
-	for i, v in ipairs(self._queue) do
+	for v in iterate(self._queue) do
 		local entity, args = v[1], v[2]
-		self:callOn(entity, 'add', unpack(args))
-		table.insert(self._entities, entity)
-		self._queue[i] = nil
+		insert(self._entities, entity)
+		for system in iterate(self.systems) do
+			if shouldSystemProcess(system, entity) then
+				self._cache[system] = self._cache[system] or {}
+				insert(self._cache[system], entity)
+				if system.sort then
+					sort(self._cache[system], system.sort)
+				end
+				if system.add then system.add(entity, args) end
+			end
+		end
+		remove(self._queue, v)
 	end
 end
 
@@ -72,15 +148,20 @@ function Pool:remove(f, ...)
 	for i = #self._entities, 1, -1 do
 		local entity = self._entities[i]
 		if f(entity) then
-			self:callOn(entity, 'remove', ...)
-			table.remove(self._entities, i)
+			for system in iterate(self.systems) do
+				if self._cache[system][entity] then
+					if system.remove then system.remove(entity, ...) end
+					remove(self._cache[system], entity)
+				end
+			end
+			remove(self._entities, entity)
 		end
 	end
 end
 
 function Pool:get(f)
 	local entities = {}
-	for _, entity in ipairs(self._entities) do
+	for entity in iterate(self._entities) do
 		if not f or f(entity) then
 			table.insert(entities, entity)
 		end
@@ -88,12 +169,14 @@ function Pool:get(f)
 	return entities
 end
 
-function Pool:sort(f) table.sort(self._entities, f) end
+function Pool:getSize()
+	return size(self._entities)
+end
 
 function nata.oop()
 	return setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == '_f' or k == 'filter' then
+			if k == '_f' or k == 'filter' or k == 'sort' then
 				return rawget(t, k)
 			else
 				t._f[k] = t._f[k] or function(e, ...)
@@ -111,6 +194,7 @@ function nata.new(systems)
 	return setmetatable({
 		systems = systems or {nata.oop()},
 		_entities = {},
+		_cache = {},
 		_queue = {},
 	}, {__index = Pool})
 end
