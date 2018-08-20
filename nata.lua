@@ -1,3 +1,5 @@
+local inspect = require 'inspect'
+
 local nata = {
 	_VERSION = 'Nata',
 	_DESCRIPTION = 'Entity management for Lua.',
@@ -27,6 +29,53 @@ local nata = {
 	]]
 }
 
+local empty = {}
+
+local function insert(t, v)
+	local position = #t + 1
+	if t._holes and #t._holes > 0 then
+		position = t._holes[1]
+		table.remove(t._holes, 1)
+	end
+	t[position] = v
+	t[v] = position
+end
+
+local function remove(t, v)
+	assert(t[v], 'trying to remove nonexistent element from table')
+	local position = t[v]
+	if position < #t then
+		t[position] = empty
+		t._holes = t._holes or {}
+		table.insert(t._holes, position)
+	else
+		t[position] = nil
+	end
+	t[v] = nil
+end
+
+local function iterate(t)
+	local i = 0
+	return function()
+		while i < #t do
+			i = i + 1
+			if t[i] ~= empty then return t[i] end
+		end
+	end
+end
+
+local test = {}
+insert(test, 'nice')
+insert(test, 'cool')
+insert(test, 'good')
+insert(test, 'excellent')
+insert(test, 'superb')
+remove(test, 'superb')
+remove(test, 'nice')
+remove(test, 'cool')
+for v in iterate(test) do print(v) end
+
+--[[
 local Pool = {}
 Pool.__index = Pool
 
@@ -110,3 +159,4 @@ function nata.new(systems)
 end
 
 return nata
+]]
