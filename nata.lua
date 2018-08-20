@@ -81,6 +81,20 @@ local function sort(t, f)
 	end
 end
 
+local function shouldSystemProcess(system, entity)
+	if not system.filter then return true
+	elseif type(system.filter) == 'table' then
+		for _, component in ipairs(system.filter) do
+			if not entity[component] then return false end
+		end
+		return true
+	elseif type(system.filter) == 'function' then
+		return system.filter(entity)
+	else
+		error 'system filter is an invalid type'
+	end
+end
+
 local Pool = {}
 Pool.__index = Pool
 
@@ -112,7 +126,7 @@ function Pool:flush()
 		local entity, args = v[1], v[2]
 		insert(self._entities, entity)
 		for system in iterate(self.systems) do
-			if not system.filter or system.filter(entity) then
+			if shouldSystemProcess(system, entity) then
 				self._cache[system] = self._cache[system] or {}
 				insert(self._cache[system], entity)
 				if system.sort then
