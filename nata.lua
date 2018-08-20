@@ -67,6 +67,20 @@ local function iterate(t)
 	end
 end
 
+local function sort(t, f)
+	table.sort(t, function(a, b)
+		if a == empty then return false end
+		if b == empty then return true end
+		return f(a, b)
+	end)
+	if t._holes then
+		for i = #t._holes, 1, -1 do
+			t[t._holes[i]] = nil
+			t._holes[i] = nil
+		end
+	end
+end
+
 local Pool = {}
 Pool.__index = Pool
 
@@ -101,6 +115,9 @@ function Pool:flush()
 			if not system.filter or system.filter(entity) then
 				self._cache[system] = self._cache[system] or {}
 				insert(self._cache[system], entity)
+				if system.sort then
+					sort(self._cache[system], system.sort)
+				end
 				if system.add then system.add(entity, args) end
 			end
 		end
@@ -136,7 +153,7 @@ end
 function nata.oop()
 	return setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == '_f' or k == 'filter' then
+			if k == '_f' or k == 'filter' or k == 'sort' then
 				return rawget(t, k)
 			else
 				t._f[k] = t._f[k] or function(e, ...)
