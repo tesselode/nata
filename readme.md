@@ -60,6 +60,12 @@ pool:remove(f)
 ```
 Removes all the entities for which `f(entity)` returns true and calls the "remove" event on each entity that is removed.
 
+### Getting the number of entities in the pool
+```lua
+size = pool:getSize()
+```
+Returns the number of entities in the pool. Useful for profiling and debugging.
+
 ## Usage - ECS style
 While object oriented programming is a powerful metaphor, the **Entity Component System** pattern can offer greater flexibility and avoid some of the problems with inheritance. With ECS, entities primarily contain **data** rather than functions, and systems act on entities depending on what components they have.
 
