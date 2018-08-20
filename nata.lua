@@ -1,5 +1,5 @@
 local nata = {
-	_VERSION = 'Nata v0.1',
+	_VERSION = 'Nata',
 	_DESCRIPTION = 'Entity management for Lua.',
 	_URL = 'https://github.com/tesselode/nata',
 	_LICENSE = [[
