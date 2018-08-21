@@ -27,6 +27,22 @@ local nata = {
 	]]
 }
 
+--[[
+--- Custom table functions ---
+These functions create tables that act as ordered sets.
+- An item can be in the set once, which is fine for everything Nata needs to do.
+- Each item can be accessed via position (t[1]) or the item itself (t[item]).
+- The value of t[item] is its index, which means that we know the position of
+  the item without having to iterate through the table to find it.
+- When items are removed, the subsequent items are not shifted back. Rather, the
+  item is replaced with the empty table. This way, we can remove items in any
+  order we want.
+- t._holes stores a list of the empty positions so that they can be filled in
+  later.
+- iterate, sort, and size all work similarly to lua's table library functions,
+  but they accomodate holes.
+]]
+
 local empty = {}
 
 local function insert(t, v)
@@ -86,17 +102,23 @@ local function size(t)
 	return #t - holes
 end
 
+-- nata functions --
+
+local function doesEntityHaveComponents(entity, components)
+	for _, component in ipairs(components) do
+		if not entity[component] then return false end
+	end
+	return true
+end
+
 local function shouldSystemProcess(system, entity)
 	if not system.filter then return true
 	elseif type(system.filter) == 'table' then
-		for _, component in ipairs(system.filter) do
-			if not entity[component] then return false end
-		end
-		return true
+		return doesEntityHaveComponents(entity, system.filter)
 	elseif type(system.filter) == 'function' then
 		return system.filter(entity)
 	else
-		error 'system filter is an invalid type'
+		error 'system filter must be either a table or a function'
 	end
 end
 
@@ -174,6 +196,19 @@ function Pool:getSize()
 end
 
 function nata.oop()
+	--[[
+	Returns a system that, whenever an index is accessed (except for reserved
+	names), will return a function that calls the function of the same name on
+	the entity (if the entity has a function with that name). These functions
+	are cached to avoid creating functions every frame.
+
+	For example, system.myWeirdlyNamedEvent will be this function:
+		function(entity, ...)
+			if type(entity.myWeirdlyNamedEvent) == 'function' then
+				entity:myWeirdlyNamedEvent(...)
+			end
+		end
+	]]
 	return setmetatable({_f = {}}, {
 		__index = function(t, k)
 			if k == '_f' or k == 'filter' or k == 'sort' then
