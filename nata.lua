@@ -29,17 +29,20 @@ local nata = {
 
 --[[
 --- Custom table functions ---
-These functions create tables that act as ordered sets.
+These functions create tables that act as ordered sets. Nata uses these so that
+items can be placed in an ordered list, but they can also be accessed by item
+and removed with minimal iteration, which is faster than idiomatic Lua table
+usage.
 - An item can be in the set once, which is fine for everything Nata needs to do.
 - Each item can be accessed via position (t[1]) or the item itself (t[item]).
 - The value of t[item] is its index, which means that we know the position of
   the item without having to iterate through the table to find it.
 - When items are removed, the subsequent items are not shifted back. Rather, the
-  item is replaced with the empty table. This way, we can remove items in any
-  order we want.
+  item is replaced with the empty table. This way, we don't have to recompute
+  the positions of all the other elements.
 - t._holes stores a list of the empty positions so that they can be filled in
   later.
-- iterate, sort, and size all work similarly to lua's table library functions,
+- iterate, sort, and size all work similarly to Lua's table library functions,
   but they accomodate holes.
 ]]
 
