@@ -7,6 +7,7 @@ local Player = Object:extend()
 Player.acceleration = 1000
 Player.friction = 10
 Player.size = vector(16, 16)
+Player.stayOnScreen = true
 Player.shoot = {
 	entity = require 'entity.player-bullet',
 	reloadTime = 1/8,

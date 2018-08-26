@@ -12,6 +12,7 @@ function game:enter()
 	self.entities = nata.new {
 		nata.oop,
 		require 'system.move',
+		require 'system.stay-on-screen',
 		require 'system.remove-when-off-screen',
 		require 'system.shoot',
 		require 'system.draw',
