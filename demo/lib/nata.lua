@@ -62,13 +62,9 @@ function System:_trigger(event, entity, ...)
 	end
 end
 
-function System:queue(...)
-	self._pool:queue(...)
-end
-
-function System:trigger(...)
-	self._pool:trigger(...)
-end
+function System:queue(...) self._pool:queue(...) end
+function System:process(...) self._pool:process(...) end
+function System:trigger(...) self._pool:trigger(...) end
 
 local function newSystem(pool, definition)
 	return setmetatable({
