@@ -32,9 +32,7 @@ local drawSystem = {
 	},
 }
 
-local entities = nata.new()
-	:addSystem(moveSystem)
-	:addSystem(drawSystem)
+local entities = nata.new {moveSystem, drawSystem}
 
 for _ = 1, 25 do
 	entities:queue {

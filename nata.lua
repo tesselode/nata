@@ -98,15 +98,6 @@ nata.oop = {
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:addSystem(definition)
-	local system = newSystem(self, definition)
-	for _, entity in ipairs(self.entities) do
-		system:_addEntity(entity)
-	end
-	table.insert(self._systems, system)
-	return self
-end
-
 function Pool:emit(event, ...)
 	for _, system in ipairs(self._systems) do
 		system:_onEmit(event, ...)
@@ -148,12 +139,17 @@ function Pool:remove(f)
 	end
 end
 
-function nata.new()
-	return setmetatable({
+function nata.new(systems)
+	systems = systems or {nata.oop}
+	local pool = setmetatable({
 		entities = {},
 		_systems = {},
 		_queue = {},
 	}, Pool)
+	for _, system in ipairs(systems) do
+		table.insert(pool._systems, newSystem(pool, system))
+	end
+	return pool
 end
 
 return nata
