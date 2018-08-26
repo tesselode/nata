@@ -12,6 +12,7 @@ function game:enter()
 	self.entities = nata.new {
 		nata.oop,
 		require 'system.move',
+		require 'system.remove-when-off-screen',
 		require 'system.shoot',
 		require 'system.draw',
 	}
@@ -26,6 +27,8 @@ end
 
 function game:draw()
 	self.entities:process('draw')
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.print(#self.entities.entities)
 end
 
 return game

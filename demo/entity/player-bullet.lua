@@ -5,6 +5,9 @@ local PlayerBullet = Object:extend()
 
 PlayerBullet.size = vector(2, 4)
 PlayerBullet.velocity = vector(0, -200)
+PlayerBullet.removeWhenOffScreen = {
+	top = true,
+}
 PlayerBullet.color = {1, 1, 1}
 
 function PlayerBullet:new(position)
