@@ -62,6 +62,10 @@ function System:_onEmit(event, ...)
 	end
 end
 
+function System:queue(entity)
+	self._pool:queue(entity)
+end
+
 function System:emit(event, ...)
 	self._pool:emit(event, ...)
 end
