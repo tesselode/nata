@@ -7,6 +7,11 @@ local Player = Object:extend()
 Player.acceleration = 1000
 Player.friction = 10
 Player.size = vector(16, 16)
+Player.shoot = {
+	entity = require 'entity.player-bullet',
+	reloadTime = 1/8,
+	enabled = false,
+}
 Player.color = {1, 1, 1}
 
 function Player:new(position)
@@ -17,6 +22,7 @@ end
 function Player:update(dt)
 	self.velocity = self.velocity + self.acceleration * dt * vector(input:get 'move')
 	self.velocity = self.velocity - self.velocity * self.friction * dt
+	self.shoot.enabled = input:down 'primary'
 end
 
 return Player

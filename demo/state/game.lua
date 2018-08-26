@@ -12,6 +12,7 @@ function game:enter()
 	self.entities = nata.new {
 		nata.oop,
 		require 'system.move',
+		require 'system.shoot',
 		require 'system.draw',
 	}
 	self.entities:queue(Player(constant.screenSize / 2))
