@@ -14,4 +14,10 @@ function PlayerBullet:new(position)
 	self.position = position - self.size/2
 end
 
+function PlayerBullet:collide(other)
+	if other:is(require 'entity.enemy') then
+		self.dead = true
+	end
+end
+
 return PlayerBullet

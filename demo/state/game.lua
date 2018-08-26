@@ -1,6 +1,8 @@
 local constant = require 'constant'
+local Enemy = require 'entity.enemy'
 local nata = require 'lib.nata'
 local Player = require 'entity.player'
+local vector = require 'lib.vector'
 
 local function removeCondition(entity)
 	return entity.dead
@@ -14,10 +16,12 @@ function game:enter()
 		require 'system.move',
 		require 'system.stay-on-screen',
 		require 'system.remove-when-off-screen',
+		require 'system.collide',
 		require 'system.shoot',
 		require 'system.draw',
 	}
 	self.entities:queue(Player(constant.screenSize / 2))
+	self.entities:queue(Enemy(vector(constant.screenSize.x/2, -16)))
 end
 
 function game:update(dt)
