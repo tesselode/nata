@@ -62,10 +62,15 @@ function System:_onEmit(event, ...)
 	end
 end
 
-local function newSystem(definition)
+function System:emit(event, ...)
+	self._pool:emit(event, ...)
+end
+
+local function newSystem(pool, definition)
 	return setmetatable({
 		entities = {},
 		hasEntity = {},
+		_pool = pool,
 		_definition = definition,
 		_sorted = false,
 	}, System)
@@ -75,7 +80,7 @@ local Pool = {}
 Pool.__index = Pool
 
 function Pool:addSystem(definition)
-	local system = newSystem(definition)
+	local system = newSystem(self, definition)
 	for _, entity in ipairs(self.entities) do
 		system:_addEntity(entity)
 	end
