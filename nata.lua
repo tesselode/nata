@@ -55,19 +55,19 @@ function System:_process(name, ...)
 	end
 end
 
-function System:_onEmit(event, ...)
+function System:_trigger(event, entity, ...)
 	self:_sort()
 	if self._definition.on and self._definition.on[event] then
-		self._definition.on[event](self, ...)
+		self._definition.on[event](self, entity, ...)
 	end
 end
 
-function System:queue(entity)
-	self._pool:queue(entity)
+function System:queue(...)
+	self._pool:queue(...)
 end
 
-function System:emit(event, ...)
-	self._pool:emit(event, ...)
+function System:trigger(...)
+	self._pool:trigger(...)
 end
 
 local function newSystem(pool, definition)
@@ -97,14 +97,28 @@ nata.oop = {
 			end
 		end,
 	}),
+	on = setmetatable({_f = {}}, {
+		__index = function(t, k)
+			if k == 'f' then
+				return rawget(t, k)
+			else
+				t._f[k] = t._f[k] or function(self, entity, ...)
+					if type(entity[k]) == 'function' then
+						entity[k](entity, ...)
+					end
+				end
+				return t._f[k]
+			end
+		end,
+	}),
 }
 
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:emit(event, ...)
+function Pool:trigger(event, entity, ...)
 	for _, system in ipairs(self._systems) do
-		system:_onEmit(event, ...)
+		system:_trigger(event, entity, ...)
 	end
 end
 
@@ -114,27 +128,28 @@ function Pool:process(name, ...)
 	end
 end
 
-function Pool:queue(entity)
-	table.insert(self._queue, entity)
+function Pool:queue(entity, ...)
+	table.insert(self._queue, {entity, {...}})
 	return entity
 end
 
 function Pool:flush()
-	for i, entity in ipairs(self._queue) do
+	for i, v in ipairs(self._queue) do
+		local entity, args = v[1], v[2]
 		table.insert(self.entities, entity)
 		for _, system in ipairs(self._systems) do
 			system:_addEntity(entity)
 		end
-		self:emit('add', entity)
+		self:trigger('add', entity, unpack(args))
 		self._queue[i] = nil
 	end
 end
 
-function Pool:remove(f)
+function Pool:remove(f, ...)
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
-			self:emit('remove', entity)
+			self:trigger('remove', entity, ...)
 			for _, system in ipairs(self._systems) do
 				system:_removeEntity(entity)
 			end
