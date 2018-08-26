@@ -67,6 +67,7 @@ function Pool:addSystem(definition)
 		system:_addEntity(entity)
 	end
 	table.insert(self._systems, system)
+	return self
 end
 
 function Pool:emit(event, ...)
@@ -92,6 +93,7 @@ function Pool:flush()
 		for _, system in ipairs(self._systems) do
 			system:_addEntity(entity)
 		end
+		self:emit('add', entity)
 		self._queue[i] = nil
 	end
 end
@@ -100,6 +102,7 @@ function Pool:remove(f)
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
+			self:emit('remove', entity)
 			for _, system in ipairs(self._systems) do
 				system:_removeEntity(entity)
 			end
@@ -108,12 +111,12 @@ function Pool:remove(f)
 	end
 end
 
-function nata.newPool()
+function nata.new()
 	return setmetatable({
 		entities = {},
 		_systems = {},
 		_queue = {},
-	})
+	}, Pool)
 end
 
 return nata
