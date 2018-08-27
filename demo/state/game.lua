@@ -48,6 +48,7 @@ end
 
 function game:draw()
 	self.entities:process('draw')
+	self.entities:process('postDraw')
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print(#self.entities.entities)
 end

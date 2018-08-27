@@ -1,4 +1,3 @@
-local constant = require 'constant'
 local input = require 'input'
 local Object = require 'lib.classic'
 local vector = require 'lib.vector'
@@ -31,10 +30,11 @@ function Player:update(dt)
 	self.shoot.enabled = input:down 'primary'
 end
 
-function Player:draw()
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.arc('fill', 'pie', constant.screenSize.x - 10, 10,
-		8, 0, 2 * math.pi * (self.alliance.health / 100), 64)
+function Player:postDraw()
+	love.graphics.setColor(.5, .5, .5)
+	love.graphics.arc('fill', 'pie', self.position.x + self.size.x/2,
+		self.position.y + self.size.y/2, 4, 0,
+		2 * math.pi * (self.alliance.health / 100), 64)
 end
 
 return Player
