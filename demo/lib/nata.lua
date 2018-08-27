@@ -56,10 +56,11 @@ function System:_process(name, ...)
 end
 
 function System:_trigger(event, entity, ...)
+	if not self._definition.on then return false end
+	if not self._definition.on[event] then return false end
+	if not self.hasEntity[entity] then return false end
 	self:_sort()
-	if self._definition.on and self._definition.on[event] then
-		self._definition.on[event](self, entity, ...)
-	end
+	self._definition.on[event](self, entity, ...)
 end
 
 function System:queue(...) self._pool:queue(...) end
