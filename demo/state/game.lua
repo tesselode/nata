@@ -21,7 +21,7 @@ function game:enter()
 		require 'system.stay-on-screen',
 		require 'system.remove-when-off-screen',
 		require 'system.collide',
-		require 'system.health',
+		require 'system.alliance',
 		require 'system.shoot',
 		require 'system.draw',
 	}

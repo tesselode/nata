@@ -9,7 +9,11 @@ Enemy3.color = {0, 1, 0}
 function Enemy3:new(position)
 	self.super.new(self, position)
 	self.velocity = vector(0, 16)
-	self.health = 8
+	self.alliance = {
+		evil = true,
+		health = 5,
+		damage = 30,
+	}
 	self.uptime = 0
 end
 

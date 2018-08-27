@@ -9,7 +9,11 @@ Enemy1.color = {1, 0, 0}
 
 function Enemy1:new(position)
 	self.super.new(self, position)
-	self.health = 1
+	self.alliance = {
+		evil = true,
+		health = 1,
+		damage = 10,
+	}
 end
 
 return Enemy1

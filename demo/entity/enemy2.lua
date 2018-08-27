@@ -14,7 +14,11 @@ function Enemy2:new(position)
 		reloadTime = 1,
 		enabled = true,
 	}
-	self.health = 1
+	self.alliance = {
+		evil = true,
+		health = 1,
+		damage = 15,
+	}
 end
 
 return Enemy2

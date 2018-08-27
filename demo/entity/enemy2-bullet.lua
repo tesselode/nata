@@ -12,12 +12,11 @@ Enemy2Bullet.color = {1, 1, 0}
 
 function Enemy2Bullet:new(position)
 	self.position = position - self.size/2
-end
-
-function Enemy2Bullet:collide(other)
-	if other:is(require 'entity.player') then
-		self.dead = true
-	end
+	self.alliance = {
+		evil = true,
+		health = 1,
+		damage = 5,
+	}
 end
 
 return Enemy2Bullet
