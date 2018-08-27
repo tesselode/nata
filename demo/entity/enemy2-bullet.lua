@@ -9,6 +9,7 @@ return function(position)
 			bottom = true,
 		},
 		alliance = {
+			isBullet = true,
 			evil = true,
 			health = 1,
 			damage = 5,

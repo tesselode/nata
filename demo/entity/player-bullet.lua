@@ -9,6 +9,7 @@ return function(position)
 			top = true,
 		},
 		alliance = {
+			isBullet = true,
 			health = 1,
 			damage = 1,
 		},
