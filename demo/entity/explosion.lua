@@ -8,6 +8,7 @@ local g = anim8.newGrid(image.explosion:getWidth()/5, image.explosion:getHeight(
 return function(position)
 	local explosion
 	explosion = {
+		depth = love.math.random(),
 		position = position,
 		sprite = {
 			image = image.explosion,

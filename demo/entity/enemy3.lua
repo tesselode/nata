@@ -7,6 +7,7 @@ local g = anim8.newGrid(image.enemyBig:getWidth()/2, image.enemyBig:getHeight(),
 
 return function(position)
 	return {
+		depth = love.math.random(),
 		position = position - vector(24, 24)/2,
 		size = vector(20, 20),
 		velocity = vector(0, 16),

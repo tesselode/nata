@@ -6,6 +6,7 @@ local g = anim8.newGrid(14, 14, image.laserBolts:getWidth(), image.laserBolts:ge
 
 return function(position)
 	return {
+		depth = love.math.random(),
 		position = position - vector(2, 4)/2,
 		size = vector(2, 4),
 		velocity = vector(0, 100),

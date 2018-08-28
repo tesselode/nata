@@ -12,6 +12,7 @@ Player.size = vector(12, 12)
 Player.stayOnScreen = true
 
 function Player:new(position)
+	self.depth = -10 + love.math.random()
 	self.position = position - self.size/2
 	self.velocity = vector()
 	self.shoot = {

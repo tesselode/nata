@@ -1,3 +1,4 @@
+local Cloud = require 'entity.cloud'
 local constant = require 'constant'
 local Enemy1 = require 'entity.enemy1'
 local Enemy2 = require 'entity.enemy2'
@@ -12,6 +13,13 @@ local function removeCondition(entity)
 end
 
 local game = {}
+
+function game:spawnCloud()
+	self.entities:queue(Cloud())
+	self.timer:after(10 + 20 * love.math.random(), function()
+		self:spawnCloud()
+	end)
+end
 
 function game:enter()
 	self.timer = timer.new()
@@ -37,6 +45,9 @@ function game:enter()
 	end)
 	self.timer:every(4.5, function()
 		self.entities:queue(Enemy3(vector(love.math.random(constant.screenSize.x), -16)))
+	end)
+	self.timer:after(5 * love.math.random(), function()
+		self:spawnCloud()
 	end)
 end
 
