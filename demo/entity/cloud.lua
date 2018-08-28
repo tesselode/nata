@@ -5,7 +5,7 @@ return function()
 	return {
 		depth = 10 + love.math.random(),
 		position = vector(0, -128),
-		velocity = vector(0, 16),
+		velocity = vector(0, 32),
 		removeWhenOffScreen = {
 			bottom = true,
 		},

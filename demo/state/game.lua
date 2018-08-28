@@ -3,6 +3,7 @@ local constant = require 'constant'
 local Enemy1 = require 'entity.enemy1'
 local Enemy2 = require 'entity.enemy2'
 local Enemy3 = require 'entity.enemy3'
+local image = require 'image'
 local nata = require 'lib.nata'
 local Player = require 'entity.player'
 local timer = require 'lib.timer'
@@ -50,6 +51,12 @@ function game:enter()
 	self.timer:after(5 * love.math.random(), function()
 		self:spawnCloud()
 	end)
+	self.backgroundY = 0
+end
+
+function game:updateBackground(dt)
+	self.backgroundY = self.backgroundY + 16 * dt
+	self.backgroundY = self.backgroundY % image.bg:getHeight()
 end
 
 function game:update(dt)
@@ -58,9 +65,17 @@ function game:update(dt)
 	self.entities:remove(removeCondition)
 	self.entities:flush()
 	self.entities:process('update', dt)
+	self:updateBackground(dt)
+end
+
+function game:drawBackground()
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.draw(image.bg, 0, self.backgroundY)
+	love.graphics.draw(image.bg, 0, self.backgroundY - image.bg:getHeight())
 end
 
 function game:draw()
+	self:drawBackground()
 	self.entities:process('draw')
 end
 
