@@ -8,7 +8,7 @@ local Player = Object:extend()
 
 Player.acceleration = 1600
 Player.friction = 10
-Player.size = vector(16, 16)
+Player.size = vector(12, 12)
 Player.stayOnScreen = true
 
 function Player:new(position)
@@ -39,7 +39,8 @@ function Player:new(position)
 				or self.velocity.x > 64 and 5
 				or self.velocity.x > 8 and 4
 				or 3
-		end
+		end,
+		offset = vector(2, 2)
 	}
 end
 

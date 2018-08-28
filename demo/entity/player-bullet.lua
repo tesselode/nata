@@ -1,4 +1,8 @@
+local anim8 = require 'lib.anim8'
+local image = require 'image'
 local vector = require 'lib.vector'
+
+local g = anim8.newGrid(14, 14, image.laserBolts:getWidth(), image.laserBolts:getHeight(), 2, 2)
 
 return function(position)
 	return {
@@ -13,6 +17,13 @@ return function(position)
 			health = 1,
 			damage = 1,
 		},
-		color = {1, 1, 1},
+		sprite = {
+			image = image.laserBolts,
+			animations = {
+				anim8.newAnimation(g('1-2', 2), 1/6)
+			},
+			current = 1,
+			offset = vector(6, 4),
+		},
 	}
 end
