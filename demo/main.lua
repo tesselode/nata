@@ -1,3 +1,5 @@
+love.graphics.setDefaultFilter('nearest', 'nearest')
+
 local constant = require 'constant'
 local game = require 'state.game'
 local gamestate = require 'lib.gamestate'
@@ -5,7 +7,7 @@ local input = require 'input'
 local push = require 'lib.push'
 
 push:setupScreen(constant.screenSize.x, constant.screenSize.y,
-	1280, 720, {canvas = false})
+	1280, 720)
 
 function love.load()
 	gamestate.registerEvents {'update', 'keypressed'}

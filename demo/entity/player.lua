@@ -1,3 +1,5 @@
+local anim8 = require 'lib.anim8'
+local image = require 'image'
 local input = require 'input'
 local Object = require 'lib.classic'
 local vector = require 'lib.vector'
@@ -8,7 +10,6 @@ Player.acceleration = 1600
 Player.friction = 10
 Player.size = vector(16, 16)
 Player.stayOnScreen = true
-Player.color = {1, 1, 1}
 
 function Player:new(position)
 	self.position = position - self.size/2
@@ -22,19 +23,30 @@ function Player:new(position)
 		health = 100,
 		damage = 100,
 	}
+	local g = anim8.newGrid(16, 24, image.ship:getWidth(), image.ship:getHeight())
+	self.sprite = {
+		image = image.ship,
+		animations = {
+			anim8.newAnimation(g(1, 1, 1, 2), 1/6),
+			anim8.newAnimation(g(2, 1, 2, 2), 1/6),
+			anim8.newAnimation(g(3, 1, 3, 2), 1/6),
+			anim8.newAnimation(g(4, 1, 4, 2), 1/6),
+			anim8.newAnimation(g(5, 1, 5, 2), 1/6),
+		},
+		current = function()
+			return self.velocity.x < -64 and 1
+				or self.velocity.x < -8 and 2
+				or self.velocity.x > 64 and 5
+				or self.velocity.x > 8 and 4
+				or 3
+		end
+	}
 end
 
 function Player:update(dt)
 	self.velocity = self.velocity + self.acceleration * dt * vector(input:get 'move')
 	self.velocity = self.velocity - self.velocity * self.friction * dt
 	self.shoot.enabled = input:down 'primary'
-end
-
-function Player:postDraw()
-	love.graphics.setColor(.5, .5, .5)
-	love.graphics.arc('fill', 'pie', self.position.x + self.size.x/2,
-		self.position.y + self.size.y/2, 4, 0,
-		2 * math.pi * (self.alliance.health / 100), 64)
 end
 
 return Player

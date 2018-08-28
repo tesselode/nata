@@ -25,6 +25,7 @@ function game:enter()
 		require 'system.alliance',
 		require 'system.shoot',
 		require 'system.draw',
+		require 'system.sprite',
 	}
 	self.entities:queue(Player(constant.screenSize / 2))
 	self.spawnSpeed = 1
@@ -49,7 +50,6 @@ end
 
 function game:draw()
 	self.entities:process('draw')
-	self.entities:process('postDraw')
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print(#self.entities.entities)
 end
