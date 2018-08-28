@@ -23,6 +23,7 @@ return function(position)
 			health = 5,
 			damage = 30,
 		},
+		points = 400,
 		sprite = {
 			image = image.enemyBig,
 			animations = {

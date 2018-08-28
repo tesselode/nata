@@ -19,6 +19,7 @@ return function(position)
 			health = 1,
 			damage = 10,
 		},
+		points = 100,
 		sprite = {
 			image = image.enemyMedium,
 			animations = {

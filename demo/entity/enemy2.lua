@@ -24,6 +24,7 @@ return function(position)
 			health = 1,
 			damage = 15,
 		},
+		points = 200,
 		sprite = {
 			image = image.enemySmall,
 			animations = {

@@ -16,6 +16,7 @@ return {
 				if not entity.alliance.isBullet then
 					self:queue(explosion(entity.position + entity.size/2))
 				end
+				self:trigger('killed', entity)
 			end
 		end,
 	}
