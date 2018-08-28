@@ -68,13 +68,15 @@ function System:process(...) self._pool:process(...) end
 function System:trigger(...) self._pool:trigger(...) end
 
 local function newSystem(pool, definition)
-	return setmetatable({
+	local system = setmetatable({
 		entities = {},
 		hasEntity = {},
 		_pool = pool,
 		_definition = definition,
 		_sorted = false,
 	}, System)
+	if system._definition.init then system._definition.init(system) end
+	return system
 end
 
 nata.oop = {
