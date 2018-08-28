@@ -1,3 +1,5 @@
+local explosion = require 'entity.explosion'
+
 return {
 	filter = {'alliance'},
 	on = {
@@ -11,6 +13,9 @@ return {
 			entity.alliance.health = entity.alliance.health - other.alliance.damage
 			if entity.alliance.health <= 0 then
 				entity.dead = true
+				if not entity.alliance.isBullet then
+					self:queue(explosion(entity.position + entity.size/2))
+				end
 			end
 		end,
 	}
