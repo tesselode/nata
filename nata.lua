@@ -30,7 +30,7 @@ local nata = {
 local System = {}
 System.__index = System
 
-function System:_shouldProcess(entity)
+function System:shouldProcess(entity)
 	if type(self._definition.filter) == 'table' then
 		for _, component in ipairs(self._definition.filter) do
 			if not entity[component] then
@@ -44,18 +44,18 @@ function System:_shouldProcess(entity)
 	return true
 end
 
-function System:_addEntity(entity)
-	if not self:_shouldProcess(entity) then
+function System:addEntity(entity)
+	if not self:shouldProcess(entity) then
 		return false
 	end
 	table.insert(self.entities, entity)
 	self.hasEntity[entity] = true
 	if self._definition.sort then
-		self._sorted = false
+		self.sorted = false
 	end
 end
 
-function System:_removeEntity(entity)
+function System:removeEntity(entity)
 	if not self.hasEntity[entity] then
 		return false
 	end
@@ -68,31 +68,27 @@ function System:_removeEntity(entity)
 	self.hasEntity[entity] = false
 end
 
-function System:_sort()
-	if self._definition.sort and not self._sorted then
+function System:sort()
+	if self._definition.sort and not self.sorted then
 		table.sort(self.entities, self._definition.sort)
-		self._sorted = true
+		self.sorted = true
 	end
 end
 
-function System:_process(name, ...)
-	self:_sort()
+function System:process(name, ...)
+	self:sort()
 	if self._definition.process and self._definition.process[name] then
 		self._definition.process[name](self, ...)
 	end
 end
 
-function System:_trigger(event, entity, ...)
+function System:trigger(event, entity, ...)
 	if not self._definition.on then return false end
 	if not self._definition.on[event] then return false end
 	if not self.hasEntity[entity] then return false end
-	self:_sort()
+	self:sort()
 	self._definition.on[event](self, entity, ...)
 end
-
-function System:queue(...) self._pool:queue(...) end
-function System:process(...) self._pool:process(...) end
-function System:trigger(...) self._pool:trigger(...) end
 
 local function newSystem(pool, definition)
 	local system = setmetatable({
@@ -100,7 +96,7 @@ local function newSystem(pool, definition)
 		hasEntity = {},
 		_pool = pool,
 		_definition = definition,
-		_sorted = false,
+		sorted = false,
 	}, System)
 	if system._definition.init then system._definition.init(system) end
 	return system
@@ -144,13 +140,13 @@ Pool.__index = Pool
 
 function Pool:trigger(event, entity, ...)
 	for _, system in ipairs(self._systems) do
-		system:_trigger(event, entity, ...)
+		system:trigger(event, entity, ...)
 	end
 end
 
 function Pool:process(name, ...)
 	for _, system in ipairs(self._systems) do
-		system:_process(name, ...)
+		system:process(name, ...)
 	end
 end
 
@@ -164,7 +160,7 @@ function Pool:flush()
 		local entity, args = v[1], v[2]
 		table.insert(self.entities, entity)
 		for _, system in ipairs(self._systems) do
-			system:_addEntity(entity)
+			system:addEntity(entity)
 		end
 		self:trigger('add', entity, unpack(args))
 		self._queue[i] = nil
@@ -177,7 +173,7 @@ function Pool:remove(f, ...)
 		if f(entity) then
 			self:trigger('remove', entity, ...)
 			for _, system in ipairs(self._systems) do
-				system:_removeEntity(entity)
+				system:removeEntity(entity)
 			end
 			table.remove(self.entities, i)
 		end
