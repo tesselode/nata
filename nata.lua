@@ -65,6 +65,9 @@ end
 function System:_process(name, ...)
 	if self._definition.process and self._definition.process[name] then
 		self._definition.process[name](self, ...)
+		if self._definition.sort and self._definition.continuousSort then
+			table.sort(self.entities, self._definition.sort)
+		end
 	end
 end
 
@@ -73,6 +76,9 @@ function System:_trigger(event, entity, ...)
 	if not self._definition.on[event] then return false end
 	if not self.hasEntity[entity] then return false end
 	self._definition.on[event](self, entity, ...)
+	if self._definition.sort and self._definition.continuousSort then
+		table.sort(self.entities, self._definition.sort)
+	end
 end
 
 local function newSystem(pool, definition)

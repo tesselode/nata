@@ -78,8 +78,11 @@ local scoreSystem = {
   filter = function(entity) return entity.points end,
 
   -- a sorting function that will be used to sort entities for this system only.
-  -- note that entities are only sorted when new ones are added.
+  -- by default, entities are only sorted when new ones are added.
   sort = function(a, b) return a.order < b.order end,
+
+  -- whether to sort entities on process/trigger as well as adding entities
+  continuousSort = true,
 
   -- the function that will be run when the pool is created.
 	init = function(self)
