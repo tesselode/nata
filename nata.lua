@@ -51,7 +51,7 @@ function System:_addEntity(entity)
 	table.insert(self.entities, entity)
 	self.hasEntity[entity] = true
 	if self._definition.sort then
-		self._sorted = false
+		table.sort(self.entities, self._definition.sort)
 	end
 end
 
@@ -68,15 +68,7 @@ function System:_removeEntity(entity)
 	self.hasEntity[entity] = false
 end
 
-function System:_sort()
-	if self._definition.sort and not self._sorted then
-		table.sort(self.entities, self._definition.sort)
-		self._sorted = true
-	end
-end
-
 function System:_process(name, ...)
-	self:_sort()
 	if self._definition.process and self._definition.process[name] then
 		self._definition.process[name](self, ...)
 	end
@@ -86,7 +78,6 @@ function System:_trigger(event, entity, ...)
 	if not self._definition.on then return false end
 	if not self._definition.on[event] then return false end
 	if not self.hasEntity[entity] then return false end
-	self:_sort()
 	self._definition.on[event](self, entity, ...)
 end
 
@@ -96,7 +87,6 @@ local function newSystem(pool, definition)
 		hasEntity = {},
 		_pool = pool,
 		_definition = definition,
-		_sorted = false,
 	}, System)
 	if system._definition.init then system._definition.init(system) end
 	return system
