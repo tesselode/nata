@@ -33,9 +33,7 @@ System.__index = System
 function System:_shouldProcess(entity)
 	if type(self._definition.filter) == 'table' then
 		for _, component in ipairs(self._definition.filter) do
-			if not entity[component] then
-				return false
-			end
+			if not entity[component] then return false end
 		end
 		return true
 	elseif type(self._definition.filter) == 'function' then
@@ -45,9 +43,7 @@ function System:_shouldProcess(entity)
 end
 
 function System:_addEntity(entity)
-	if not self:_shouldProcess(entity) then
-		return false
-	end
+	if not self:_shouldProcess(entity) then return false end
 	table.insert(self.entities, entity)
 	self.hasEntity[entity] = true
 	if self._definition.sort then
@@ -56,9 +52,7 @@ function System:_addEntity(entity)
 end
 
 function System:_removeEntity(entity)
-	if not self.hasEntity[entity] then
-		return false
-	end
+	if not self.hasEntity[entity] then return false end
 	for i = #self.entities, 1, -1 do
 		if self.entities[i] == entity then
 			table.remove(self.entities, i)
