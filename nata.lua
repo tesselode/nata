@@ -125,32 +125,24 @@ end
 nata.oop = {
 	process = setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == '_f' then
-				return rawget(t, k)
-			else
-				t._f[k] = t._f[k] or function(self, ...)
-					for _, entity in ipairs(self.entities) do
-						if type(entity[k]) == 'function' then
-							entity[k](entity, ...)
-						end
-					end
-				end
-				return t._f[k]
-			end
-		end,
-	}),
-	on = setmetatable({_f = {}}, {
-		__index = function(t, k)
-			if k == '_f' then
-				return rawget(t, k)
-			else
-				t._f[k] = t._f[k] or function(self, entity, ...)
+			t._f[k] = t._f[k] or function(self, ...)
+				for _, entity in ipairs(self.entities) do
 					if type(entity[k]) == 'function' then
 						entity[k](entity, ...)
 					end
 				end
-				return t._f[k]
 			end
+			return t._f[k]
+		end,
+	}),
+	on = setmetatable({_f = {}}, {
+		__index = function(t, k)
+			t._f[k] = t._f[k] or function(self, entity, ...)
+				if type(entity[k]) == 'function' then
+					entity[k](entity, ...)
+				end
+			end
+			return t._f[k]
 		end,
 	}),
 }
