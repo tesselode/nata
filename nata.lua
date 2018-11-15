@@ -27,9 +27,29 @@ local nata = {
 	]]
 }
 
+--[[
+	System definitions:
+
+	Passed to nata.new to define the systems you can use. They're a table with the following keys:
+	- filter - function|table|nil - defines what entities the system acts on
+		- if it's a function and function(entity) returns true, the system will act on that entity
+		- if it's a table and each item of the table is a key in the entity, the system will act on that entity
+		- if it's nil, the system will act on every entity
+	- sort (optional) - if defined, systems will sort their entities when new ones are added.
+		- sort functions work the same way as with table.sort
+	- continuousSort - if true, systems will also sort entities on process/trigger
+	- init (optional) - a self function that will run when the pool is created
+	- process (optional) - a table of self functions that will be called when pool.process is called
+		- arguments are self and any additional arguments passed to pool.process
+	- on (optional) - a table of self functions that will be run when pool.trigger is called
+		- arguments are self, entity, and any additional arguments passed to pool.trigger
+]]
+
+-- A system instance that does processing on entities within a pool.
 local System = {}
 System.__index = System
 
+-- internal functions --
 function System:_shouldProcess(entity)
 	if type(self._definition.filter) == 'table' then
 		for _, component in ipairs(self._definition.filter) do
@@ -81,14 +101,15 @@ function System:_trigger(event, entity, ...)
 	end
 end
 
+-- public functions - accessible within the system's process/trigger functions --
 function System:queue(...) self._pool:queue(...) end
 function System:process(...) self._pool:process(...) end
 function System:trigger(...) self._pool:trigger(...) end
 
 local function newSystem(pool, definition)
 	local system = setmetatable({
-		entities = {},
-		hasEntity = {},
+		entities = {}, -- also accessible from within system process/trigger functions
+		hasEntity = {}, -- also accessible from within system process/trigger functions
 		_pool = pool,
 		_definition = definition,
 	}, System)
@@ -96,6 +117,11 @@ local function newSystem(pool, definition)
 	return system
 end
 
+--[[
+	a system that forwards pool.process/trigger calls to each entity
+	for example, if pool.process('update', dt) is called, this system
+	will call entity:update(dt) on each entity that has an update function
+]] 
 nata.oop = {
 	process = setmetatable({_f = {}}, {
 		__index = function(t, k)
@@ -129,6 +155,7 @@ nata.oop = {
 	}),
 }
 
+-- A manager for entities and systems
 local Pool = {}
 Pool.__index = Pool
 
@@ -174,6 +201,7 @@ function Pool:remove(f, ...)
 	end
 end
 
+-- Creates a new pool
 function nata.new(systems)
 	systems = systems or {nata.oop}
 	local pool = setmetatable({

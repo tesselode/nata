@@ -33,9 +33,9 @@ Adds all of the entities in the queue to the pool. For each entity, `entity:add(
 
 ### Running a function on all entities
 ```lua
-pool:process(name, ...)
+pool:process(event, ...)
 ```
-For each entity, this will run `entity:[name](...)` if the entity has a function called `name`. Any additional arguments passed to `pool.process` will be passed to each entity's function.
+For each entity, this will run `entity:[event](...)` if the entity has a function called `event`. Any additional arguments passed to `pool.process` will be passed to each entity's function.
 
 ### Running a function for a single entity
 ```lua
@@ -61,8 +61,6 @@ pool = nata.new(systems)
 
 ### Defining systems
 Systems are objects that act on a certain subset of the entity pool. The entities that a system acts on is determined by its filter, and the system performs actions when `pool.process` or `pool.trigger` are called.
-
-When a pool is created, an "instance" of each system is created. Each instance has access to itself and to its own filtered entity pool.
 
 Systems are defined by a table such as this one:
 ```lua
@@ -93,7 +91,7 @@ local scoreSystem = {
   -- is called.
 	on = {
 		killed = function(self, entity)
-			self.score = self.score + entity.points
+      self.score = self.score + entity.points
 		end,
   },
   
@@ -107,6 +105,14 @@ local scoreSystem = {
 	}
 }
 ```
+
+When a pool is created, an "instance" of each system is created. The system process/trigger functions take the system instance as their first argument, providing access to the following properties and functions:
+- `entities` - a list of the entities the system acts on
+- `hasEntity` - a set of the entities the system acts on
+  - If `self.hasEntity[entity]` is `true`, that means the system currently acts on `entity`
+- `queue(entity, ...)` - equivalent to `pool.queue`
+- `process(event, ...)` - equivalent to `pool.process`
+- `trigger(entity, event, ...)` - equivalent to `pool.trigger`
 
 ### Hybrid OOP/ECS style
 Nata's OOP functionality is implemented as a single system that forwards processes and triggers to every entity. If you want to use this system in combination with other systems, add `nata.oop` to the `systems` table.
