@@ -15,8 +15,9 @@ local moveSystem = {
 local drawSystem = {
 	filter = {'x', 'y', 'w', 'h', 'color'},
 	sort = function(a, b)
-		return a.w * a.h > b.w * b.h
+		return a.y > b.y
 	end,
+	continuousSort = true,
 	on = {
 		add = function(self, entity)
 			print('added ' .. tostring(entity) .. ' to draw system')

@@ -121,7 +121,7 @@ end
 	a system that forwards pool.process/trigger calls to each entity
 	for example, if pool.process('update', dt) is called, this system
 	will call entity:update(dt) on each entity that has an update function
-]] 
+]]
 nata.oop = {
 	process = setmetatable({_f = {}}, {
 		__index = function(t, k)
