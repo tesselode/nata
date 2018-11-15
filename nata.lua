@@ -125,7 +125,7 @@ end
 nata.oop = {
 	process = setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == 'f' then
+			if k == '_f' then
 				return rawget(t, k)
 			else
 				t._f[k] = t._f[k] or function(self, ...)
@@ -141,7 +141,7 @@ nata.oop = {
 	}),
 	on = setmetatable({_f = {}}, {
 		__index = function(t, k)
-			if k == 'f' then
+			if k == '_f' then
 				return rawget(t, k)
 			else
 				t._f[k] = t._f[k] or function(self, entity, ...)
