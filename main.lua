@@ -16,18 +16,21 @@ local drawSystem = {
 		return a.y > b.y
 	end,
 	continuousSort = true,
+	init = function(self, colorOverride)
+		self.colorOverride = colorOverride
+	end,
 	add = function(self, entity)
 		print('added ' .. tostring(entity) .. ' to draw system')
 	end,
 	draw = function(self)
 		for _, entity in ipairs(self.entities) do
-			love.graphics.setColor(entity.color)
+			love.graphics.setColor(self.colorOverride or entity.color)
 			love.graphics.rectangle('fill', entity.x, entity.y, entity.w, entity.h)
 		end
 	end,
 }
 
-local entities = nata.new {moveSystem, drawSystem}
+local entities = nata.new({moveSystem, drawSystem}, {.5, .5, .5})
 
 for _ = 1, 25 do
 	entities:queue {

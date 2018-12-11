@@ -107,14 +107,14 @@ end
 function System:queue(...) self._pool:queue(...) end
 function System:call(...) self._pool:call(...) end
 
-local function newSystem(pool, definition)
+local function newSystem(pool, definition, ...)
 	local system = setmetatable({
 		entities = {}, -- also accessible from within system definition's functions
 		hasEntity = {}, -- also accessible from within system definition's functions
 		_pool = pool,
 		_definition = definition,
 	}, System)
-	if system._definition.init then system._definition.init(system) end
+	if system._definition.init then system._definition.init(system, ...) end
 	return system
 end
 
@@ -182,7 +182,7 @@ function Pool:remove(f, ...)
 end
 
 -- Creates a new pool
-function nata.new(systems)
+function nata.new(systems, ...)
 	systems = systems or {nata.oop}
 	local pool = setmetatable({
 		entities = {},
@@ -190,7 +190,7 @@ function nata.new(systems)
 		_queue = {},
 	}, Pool)
 	for _, system in ipairs(systems) do
-		table.insert(pool._systems, newSystem(pool, system))
+		table.insert(pool._systems, newSystem(pool, system, ...))
 	end
 	return pool
 end
