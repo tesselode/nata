@@ -4,7 +4,7 @@ local Enemy1 = require 'entity.enemy1'
 local Enemy2 = require 'entity.enemy2'
 local Enemy3 = require 'entity.enemy3'
 local image = require 'image'
-local nata = require 'lib.nata'
+local nata = require 'nata'
 local Player = require 'entity.player'
 local timer = require 'lib.timer'
 local vector = require 'lib.vector'
@@ -25,7 +25,7 @@ end
 function game:enter()
 	self.timer = timer.new()
 	self.entities = nata.new {
-		nata.oop,
+		nata.oop(),
 		require 'system.move',
 		require 'system.wiggle',
 		require 'system.stay-on-screen',
@@ -64,7 +64,7 @@ function game:update(dt)
 	self.timer:update(self.spawnSpeed * dt)
 	self.entities:remove(removeCondition)
 	self.entities:flush()
-	self.entities:process('update', dt)
+	self.entities:call('update', dt)
 	self:updateBackground(dt)
 end
 
@@ -76,7 +76,7 @@ end
 
 function game:draw()
 	self:drawBackground()
-	self.entities:process('draw')
+	self.entities:call('draw')
 end
 
 return game
