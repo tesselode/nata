@@ -134,6 +134,7 @@ end
 function nata.oop(sort, continuousSort)
 	return setmetatable({_f = {}}, {
 		__index = function(t, k)
+			if k == 'filter' or k == 'init' then return nil end
 			if k == 'sort' then return sort end
 			if k == 'continuousSort' then return continuousSort end
 			t._f[k] = t._f[k] or function(self, ...)
