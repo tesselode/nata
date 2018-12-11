@@ -74,18 +74,24 @@ function System:_shouldProcess(entity)
 end
 
 -- adds an entity to the system's pool and sorts the entities if needed
-function System:_addEntity(entity)
+function System:_addEntity(entity, ...)
 	if not self:_shouldProcess(entity) then return false end
 	table.insert(self.entities, entity)
 	self.hasEntity[entity] = true
+	if type(self._definition.add) == 'function' then
+		self._definition.add(self, entity, ...)
+	end
 	if self._definition.sort then
 		table.sort(self.entities, self._definition.sort)
 	end
 end
 
 -- removes an entity from the system's pool
-function System:_removeEntity(entity)
+function System:_removeEntity(entity, ...)
 	if not self.hasEntity[entity] then return false end
+	if type(self._definition.remove) == 'function' then
+		self._definition.remove(self, entity, ...)
+	end
 	for i = #self.entities, 1, -1 do
 		if self.entities[i] == entity then
 			table.remove(self.entities, i)
@@ -163,9 +169,8 @@ function Pool:flush()
 		local entity, args = v[1], v[2]
 		table.insert(self.entities, entity)
 		for _, system in ipairs(self._systems) do
-			system:_addEntity(entity)
+			system:_addEntity(entity, unpack(args))
 		end
-		self:call('add', entity, unpack(args))
 		self._queue[i] = nil
 	end
 end
@@ -174,9 +179,8 @@ function Pool:remove(f, ...)
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
-			self:call('remove', entity, ...)
 			for _, system in ipairs(self._systems) do
-				system:_removeEntity(entity)
+				system:_removeEntity(entity, ...)
 			end
 			table.remove(self.entities, i)
 		end
