@@ -32,6 +32,8 @@ local function checkForReservedNames(name)
 	if name == 'sort' then error 'sort is a reserved name for systems' end
 	if name == 'continuousSort' then error 'continuousSort is a reserved name for systems' end
 	if name == 'init' then error 'init is a reserved name for systems' end
+	if name == 'add' then error 'add is a reserved name for systems' end
+	if name == 'remove' then error 'remove is a reserved name for systems' end
 	if name == 'queue' then error 'queue is a reserved name for systems' end
 	if name == 'call' then error 'call is a reserved name for systems' end
 end
