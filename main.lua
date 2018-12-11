@@ -2,14 +2,12 @@ local nata = require 'nata'
 
 local moveSystem = {
 	filter = {'x', 'y', 'vx', 'vy'},
-	process = {
-		update = function(self, dt)
-			for _, entity in ipairs(self.entities) do
-				entity.x = entity.x + entity.vx * dt
-				entity.y = entity.y + entity.vy * dt
-			end
-		end,
-	}
+	update = function(self, dt)
+		for _, entity in ipairs(self.entities) do
+			entity.x = entity.x + entity.vx * dt
+			entity.y = entity.y + entity.vy * dt
+		end
+	end,
 }
 
 local drawSystem = {
@@ -18,19 +16,15 @@ local drawSystem = {
 		return a.y > b.y
 	end,
 	continuousSort = true,
-	on = {
-		add = function(self, entity)
-			print('added ' .. tostring(entity) .. ' to draw system')
-		end,
-	},
-	process = {
-		draw = function(self)
-			for _, entity in ipairs(self.entities) do
-				love.graphics.setColor(entity.color)
-				love.graphics.rectangle('fill', entity.x, entity.y, entity.w, entity.h)
-			end
-		end,
-	},
+	add = function(self, entity)
+		print('added ' .. tostring(entity) .. ' to draw system')
+	end,
+	draw = function(self)
+		for _, entity in ipairs(self.entities) do
+			love.graphics.setColor(entity.color)
+			love.graphics.rectangle('fill', entity.x, entity.y, entity.w, entity.h)
+		end
+	end,
 }
 
 local entities = nata.new {moveSystem, drawSystem}
@@ -53,9 +47,9 @@ end
 
 function love.update(dt)
 	entities:flush()
-	entities:process('update', dt)
+	entities:call('update', dt)
 end
 
 function love.draw()
-	entities:process('draw')
+	entities:call('draw')
 end

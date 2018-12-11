@@ -27,6 +27,15 @@ local nata = {
 	]]
 }
 
+local function checkForReservedNames(name)
+	if name == 'filter' then error 'filter is a reserved name for systems' end
+	if name == 'sort' then error 'sort is a reserved name for systems' end
+	if name == 'continuousSort' then error 'continuousSort is a reserved name for systems' end
+	if name == 'init' then error 'init is a reserved name for systems' end
+	if name == 'queue' then error 'queue is a reserved name for systems' end
+	if name == 'call' then error 'call is a reserved name for systems' end
+end
+
 --[[
 	System definitions:
 
@@ -37,12 +46,9 @@ local nata = {
 		- if it's nil, the system will act on every entity
 	- sort (optional) - if defined, systems will sort their entities when new ones are added.
 		- sort functions work the same way as with table.sort
-	- continuousSort - if true, systems will also sort entities on process/trigger
+	- continuousSort - if true, systems will also sort entities on pool calls
 	- init (optional) - a self function that will run when the pool is created
-	- process (optional) - a table of self functions that will be called when pool.process is called
-		- arguments are self and any additional arguments passed to pool.process
-	- on (optional) - a table of self functions that will be run when pool.trigger is called
-		- arguments are self, entity, and any additional arguments passed to pool.trigger
+	- ... - other functions will be called when pool:call(...) is called
 ]]
 
 -- A system instance that does processing on entities within a pool.
@@ -50,6 +56,9 @@ local System = {}
 System.__index = System
 
 -- internal functions --
+
+-- uses the filter table/function in the system definition to decide if the system
+-- should add an entity to its pool
 function System:_shouldProcess(entity)
 	if type(self._definition.filter) == 'table' then
 		for _, component in ipairs(self._definition.filter) do
@@ -62,6 +71,7 @@ function System:_shouldProcess(entity)
 	return true
 end
 
+-- adds an entity to the system's pool and sorts the entities if needed
 function System:_addEntity(entity)
 	if not self:_shouldProcess(entity) then return false end
 	table.insert(self.entities, entity)
@@ -71,6 +81,7 @@ function System:_addEntity(entity)
 	end
 end
 
+-- removes an entity from the system's pool
 function System:_removeEntity(entity)
 	if not self.hasEntity[entity] then return false end
 	for i = #self.entities, 1, -1 do
@@ -82,34 +93,24 @@ function System:_removeEntity(entity)
 	self.hasEntity[entity] = false
 end
 
-function System:_process(name, ...)
-	if self._definition.process and self._definition.process[name] then
-		self._definition.process[name](self, ...)
+function System:_call(name, ...)
+	checkForReservedNames(name)
+	if type(self._definition[name]) == 'function' then
+		self._definition[name](self, ...)
 		if self._definition.sort and self._definition.continuousSort then
 			table.sort(self.entities, self._definition.sort)
 		end
 	end
 end
 
-function System:_trigger(event, entity, ...)
-	if not self._definition.on then return false end
-	if not self._definition.on[event] then return false end
-	if not self.hasEntity[entity] then return false end
-	self._definition.on[event](self, entity, ...)
-	if self._definition.sort and self._definition.continuousSort then
-		table.sort(self.entities, self._definition.sort)
-	end
-end
-
--- public functions - accessible within the system's process/trigger functions --
+-- public functions - accessible within the system definition's functions --
 function System:queue(...) self._pool:queue(...) end
-function System:process(...) self._pool:process(...) end
-function System:trigger(...) self._pool:trigger(...) end
+function System:call(...) self._pool:call(...) end
 
 local function newSystem(pool, definition)
 	local system = setmetatable({
-		entities = {}, -- also accessible from within system process/trigger functions
-		hasEntity = {}, -- also accessible from within system process/trigger functions
+		entities = {}, -- also accessible from within system definition's functions
+		hasEntity = {}, -- also accessible from within system definition's functions
 		_pool = pool,
 		_definition = definition,
 	}, System)
@@ -118,13 +119,15 @@ local function newSystem(pool, definition)
 end
 
 --[[
-	a system that forwards pool.process/trigger calls to each entity
-	for example, if pool.process('update', dt) is called, this system
+	creates a system that forwards pool calls to each entity
+	for example, if pool:call('update', dt) is called, the system
 	will call entity:update(dt) on each entity that has an update function
 ]]
-nata.oop = {
-	process = setmetatable({_f = {}}, {
+function nata.oop(sort, continuousSort)
+	return setmetatable({_f = {}}, {
 		__index = function(t, k)
+			if k == 'sort' then return sort end
+			if k == 'continuousSort' then return continuousSort end
 			t._f[k] = t._f[k] or function(self, ...)
 				for _, entity in ipairs(self.entities) do
 					if type(entity[k]) == 'function' then
@@ -133,33 +136,18 @@ nata.oop = {
 				end
 			end
 			return t._f[k]
-		end,
-	}),
-	on = setmetatable({_f = {}}, {
-		__index = function(t, k)
-			t._f[k] = t._f[k] or function(self, entity, ...)
-				if type(entity[k]) == 'function' then
-					entity[k](entity, ...)
-				end
-			end
-			return t._f[k]
-		end,
-	}),
-}
+		end
+	})
+end
 
 -- A manager for entities and systems
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:trigger(event, entity, ...)
+function Pool:call(name, ...)
+	checkForReservedNames(name)
 	for _, system in ipairs(self._systems) do
-		system:_trigger(event, entity, ...)
-	end
-end
-
-function Pool:process(name, ...)
-	for _, system in ipairs(self._systems) do
-		system:_process(name, ...)
+		system:_call(name, ...)
 	end
 end
 
@@ -175,7 +163,7 @@ function Pool:flush()
 		for _, system in ipairs(self._systems) do
 			system:_addEntity(entity)
 		end
-		self:trigger('add', entity, unpack(args))
+		self:call('add', entity, unpack(args))
 		self._queue[i] = nil
 	end
 end
@@ -184,7 +172,7 @@ function Pool:remove(f, ...)
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
-			self:trigger('remove', entity, ...)
+			self:call('remove', entity, ...)
 			for _, system in ipairs(self._systems) do
 				system:_removeEntity(entity)
 			end
