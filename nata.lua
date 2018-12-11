@@ -53,7 +53,9 @@ end
 
 -- A system instance that does processing on entities within a pool.
 local System = {}
-System.__index = System
+function System:__index(k)
+	return System[k] or self._definition[k]
+end
 
 -- internal functions --
 

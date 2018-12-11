@@ -22,10 +22,13 @@ local drawSystem = {
 	add = function(self, entity)
 		print('added ' .. tostring(entity) .. ' to draw system')
 	end,
+	drawEntity = function(self, entity)
+		love.graphics.setColor(self.colorOverride or entity.color)
+		love.graphics.rectangle('fill', entity.x, entity.y, entity.w, entity.h)
+	end,
 	draw = function(self)
 		for _, entity in ipairs(self.entities) do
-			love.graphics.setColor(self.colorOverride or entity.color)
-			love.graphics.rectangle('fill', entity.x, entity.y, entity.w, entity.h)
+			self:drawEntity(entity)
 		end
 	end,
 }
