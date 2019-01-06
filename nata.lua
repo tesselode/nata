@@ -192,7 +192,7 @@ end
 
 -- Creates a new pool
 function nata.new(systems, ...)
-	systems = systems or {nata.oop}
+	systems = systems or {nata.oop()}
 	local pool = setmetatable({
 		entities = {},
 		_systems = {},
