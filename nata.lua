@@ -50,6 +50,8 @@ end
 		- sort functions work the same way as with table.sort
 	- continuousSort - if true, systems will also sort entities on pool calls
 	- init (optional) - a self function that will run when the pool is created
+	- add (optional) - a self function that will run when an entity is added
+	- remove (optional) - a self function that will run when an entity is removed
 	- ... - other functions will be called when pool:call(...) is called
 ]]
 

@@ -33,14 +33,9 @@ Adds all of the entities in the queue to the pool. For each entity, `entity:add(
 
 ### Running a function on all entities
 ```lua
-pool:process(event, ...)
+pool:call(event, ...)
 ```
-For each entity, this will run `entity:[event](...)` if the entity has a function called `event`. Any additional arguments passed to `pool.process` will be passed to each entity's function.
-
-### Running a function for a single entity
-```lua
-pool:trigger(entity, event, ...)
-```
+For each entity, this will run `entity:[event](...)` if the entity has a function called `event`. Any additional arguments passed to `pool.call` will be passed to each entity's function.
 
 ### Accessing entities
 You can access the entities table directly using `pool.entities`. Feel free to read and modify these entities, but it's not recommended to manually insert or remove entities using this table.
@@ -60,7 +55,7 @@ pool = nata.new(systems)
 ```
 
 ### Defining systems
-Systems are objects that act on a certain subset of the entity pool. The entities that a system acts on is determined by its filter, and the system performs actions when `pool.process` or `pool.trigger` are called.
+Systems are objects that act on a certain subset of the entity pool. The entities that a system acts on is determined by its filter, and the system performs actions when `pool.call` is called.
 
 Systems are defined by a table such as this one:
 ```lua
@@ -79,43 +74,47 @@ local scoreSystem = {
   -- by default, entities are only sorted when new ones are added.
   sort = function(a, b) return a.order < b.order end,
 
-  -- whether to sort entities on process/trigger as well as adding entities
+  -- whether to sort entities when running events as well as adding entities
   continuousSort = true,
 
   -- the function that will be run when the pool is created.
 	init = function(self)
 		self.score = 0
   end,
+
+  -- called when an entity is added to a system
+  -- only called for entities that this system actually processes
+  -- additional arguments can be passed in from pool.queue
+  add = function(self, entity, ...) end,
+
+  -- called when an entity is removed from a system
+  -- only called for entities that this system actually processes
+  -- additional arguments can be passed in from pool.remove
+  remove = function(self, entity, ...) end,
   
-  -- trigger functions - system.on[event] will be called when pool:trigger(event)
-  -- is called.
-	on = {
-		killed = function(self, entity)
-      self.score = self.score + entity.points
-		end,
-  },
-  
-  -- process functions - system.process[name] will be called when pool:process(name)
-  -- is called.
-	process = {
-		draw = function(self)
-			love.graphics.setColor(255, 255, 255)
-			love.graphics.print(self.score)
-		end,
-	}
+  -- other functions can be defined that correspond to events called using pool.call
+  -- note that in this example, entity is not passed automatically, it's passed
+  -- manually as an argument to pool.call
+  killed = function(self, entity)
+    self.score = self.score + entity.points
+  end,
+
+  draw = function(self)
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.print(self.score)
+  end,
 }
 ```
 
-When a pool is created, an "instance" of each system is created. The system process/trigger functions take the system instance as their first argument, providing access to the following properties and functions:
+When a pool is created, an "instance" of each system is created. The system functions take the system instance as their first argument, providing access to the following properties and functions:
 - `entities` - a list of the entities the system acts on
 - `hasEntity` - a set of the entities the system acts on
   - If `self.hasEntity[entity]` is `true`, that means the system currently acts on `entity`
 - `queue(entity, ...)` - equivalent to `pool.queue`
-- `process(event, ...)` - equivalent to `pool.process`
-- `trigger(entity, event, ...)` - equivalent to `pool.trigger`
+- `call(event, ...)` - equivalent to `pool.call`
 
 ### Hybrid OOP/ECS style
-Nata's OOP functionality is implemented as a single system that forwards processes and triggers to every entity. If you want to use this system in combination with other systems, add `nata.oop` to the `systems` table.
+Nata's OOP functionality is implemented as a single system that forwards events to every entity. If you want to use this system in combination with other systems, add `nata.oop()` to the `systems` table.
 
 ## Contributing
 This library is in early development. Feel free to make suggestions about the design. Issues and pull requests are always welcome.
@@ -123,22 +122,10 @@ This library is in early development. Feel free to make suggestions about the de
 ## License
 MIT License
 
-Copyright (c) 2018 Andrew Minnich
+Copyright (c) 2019 Andrew Minnich
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
