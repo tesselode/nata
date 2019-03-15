@@ -46,7 +46,7 @@ function Pool:_init(options)
 	for _, systemDefinition in ipairs(systems) do
 		local system = setmetatable({
 			pool = self,
-		}, systemDefinition)
+		}, {__index = systemDefinition})
 		table.insert(self._systems, system)
 	end
 	self:emit 'init'
@@ -74,15 +74,13 @@ function Pool:flush()
 end
 
 function Pool:remove(f)
-	for i = #self._entities, 1, -1 do
-		local entity = self._entities[i]
-		if f(entity) then
-			for groupName, group in ipairs(self.groups) do
-				if group.hasEntity[entity] then
-					removeByValue(group.entities, entity)
-					group.hasEntity[entity] = nil
-					self:emit('remove', groupName, entity)
-				end
+	for groupName, group in pairs(self.groups) do
+		for i = #group.entities, 1, -1 do
+			local entity = group.entities[i]
+			if f(entity) then
+				removeByValue(group.entities, entity)
+				group.hasEntity[entity] = nil
+				self:emit('remove', groupName, entity)
 			end
 		end
 	end
@@ -91,7 +89,7 @@ end
 function Pool:emit(event, ...)
 	for _, system in ipairs(self._systems) do
 		if type(system[event]) == 'function' then
-			system[event](...)
+			system[event](system, ...)
 		end
 	end
 end
