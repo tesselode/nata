@@ -31,7 +31,7 @@ Pool.__index = Pool
 function Pool:_init(options)
 	options = options or {}
 	local groups = options.groups or {entities = {}}
-	local systems = options.systems or {}
+	local systems = options.systems or {nata.oop 'entities'}
 	self._queue = {}
 	self.groups = {}
 	for groupName, groupOptions in pairs(groups) do
@@ -92,6 +92,21 @@ function Pool:emit(event, ...)
 			system[event](system, ...)
 		end
 	end
+end
+
+function nata.oop(groupName)
+	return setmetatable({_cache = {}}, {
+		__index = function(self, event)
+			self._cache[event] = self._cache[event] or function(_, ...)
+				for _, entity in ipairs(self.pool.groups[groupName].entities) do
+					if type(entity[event] == 'function') then
+						entity[event](entity, ...)
+					end
+				end
+			end
+			return self._cache[event]
+		end
+	})
 end
 
 function nata.new(...)
