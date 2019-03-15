@@ -21,9 +21,8 @@ local function filterEntity(entity, filter)
 		return entityHasKeys(entity, filter)
 	elseif type(filter) == 'function' then
 		return filter(entity)
-	else
-		assert 'filter must be a table or function'
 	end
+	return true
 end
 
 local Pool = {}
@@ -31,18 +30,26 @@ Pool.__index = Pool
 
 function Pool:_init(options)
 	options = options or {}
-	local groups = options.groups or {}
+	local groups = options.groups or {entities = {}}
+	local systems = options.systems or {}
 	self._queue = {}
-	self._entities = {}
-	self._groups = {}
+	self.groups = {}
 	for groupName, groupOptions in pairs(groups) do
-		self._groups[groupName] = {
+		self.groups[groupName] = {
 			filter = groupOptions.filter,
 			sort = groupOptions.sort,
 			entities = {},
 			hasEntity = {},
 		}
 	end
+	self._systems = {}
+	for _, systemDefinition in ipairs(systems) do
+		local system = setmetatable({
+			pool = self,
+		}, systemDefinition)
+		table.insert(self._systems, system)
+	end
+	self:emit 'init'
 end
 
 function Pool:queue(entity)
@@ -52,11 +59,14 @@ end
 function Pool:flush()
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
-		table.insert(self._entities, entity)
-		for _, group in pairs(self._groups) do
+		for groupName, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
 				table.insert(group.entities, entity)
+				if group.sort then
+					table.sort(group.entities, group.sort)
+				end
 				group.hasEntity[entity] = true
+				self:emit('add', groupName, entity)
 			end
 		end
 		self._queue[i] = nil
@@ -67,12 +77,21 @@ function Pool:remove(f)
 	for i = #self._entities, 1, -1 do
 		local entity = self._entities[i]
 		if f(entity) then
-			for _, group in ipairs(self._groups) do
+			for groupName, group in ipairs(self.groups) do
 				if group.hasEntity[entity] then
 					removeByValue(group.entities, entity)
 					group.hasEntity[entity] = nil
+					self:emit('remove', groupName, entity)
 				end
 			end
+		end
+	end
+end
+
+function Pool:emit(event, ...)
+	for _, system in ipairs(self._systems) do
+		if type(system[event]) == 'function' then
+			system[event](...)
 		end
 	end
 end
