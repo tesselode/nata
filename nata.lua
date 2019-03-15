@@ -1,14 +1,5 @@
 local nata = {}
 
-local function removeByValue(t, v)
-	for i = #t, 1, -1 do
-		if t[i] == v then
-			table.remove(t, i)
-			break
-		end
-	end
-end
-
 local function entityHasKeys(entity, keys)
 	for _, key in ipairs(keys) do
 		if not entity[key] then return false end
@@ -78,7 +69,7 @@ function Pool:remove(f)
 		for i = #group.entities, 1, -1 do
 			local entity = group.entities[i]
 			if f(entity) then
-				removeByValue(group.entities, entity)
+				table.remove(group.entities, i)
 				group.hasEntity[entity] = nil
 				self:emit('remove', groupName, entity)
 			end
