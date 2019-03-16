@@ -5,10 +5,12 @@ local pool = nata.new {
 	groups = {
 		all = {},
 		physical = {filter = {'x', 'y', 'r'}},
+		shoot = {filter = {'x', 'y', 'shoot'}},
 	},
 	systems = {
 		nata.oop 'all',
 		require 'system.physical',
+		require 'system.shoot'
 	},
 }
 

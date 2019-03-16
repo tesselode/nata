@@ -1,3 +1,5 @@
+local PlayerBullet = require 'entity.player-bullet'
+
 local Player = {}
 Player.__index = Player
 
@@ -12,9 +14,13 @@ setmetatable(Player, {
 function Player:new(x, y)
 	self.x = x
 	self.y = y
-	self.r = 32
+	self.r = 16
 	self.vx = 0
 	self.vy = 0
+	self.shoot = {
+		entity = PlayerBullet,
+		reloadTime = 1/6,
+	}
 end
 
 function Player:update(dt)
@@ -31,8 +37,10 @@ function Player:update(dt)
 	if love.keyboard.isDown 'down' then
 		inputY = inputY + 1
 	end
-	self.vx = inputX * 200
-	self.vy = inputY * 200
+	self.vx = inputX * 300
+	self.vy = inputY * 300
+
+	self.shoot.disabled = not love.keyboard.isDown 'z'
 end
 
 return Player
