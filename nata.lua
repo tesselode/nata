@@ -87,15 +87,15 @@ end
 
 function nata.oop(groupName)
 	return setmetatable({_cache = {}}, {
-		__index = function(self, event)
-			self._cache[event] = self._cache[event] or function(_, ...)
+		__index = function(t, event)
+			t._cache[event] = t._cache[event] or function(self, ...)
 				for _, entity in ipairs(self.pool.groups[groupName].entities) do
 					if type(entity[event] == 'function') then
 						entity[event](entity, ...)
 					end
 				end
 			end
-			return self._cache[event]
+			return t._cache[event]
 		end
 	})
 end
