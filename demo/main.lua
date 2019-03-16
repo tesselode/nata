@@ -32,4 +32,8 @@ end
 
 function love.draw()
 	pool:emit 'draw'
+
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.print('FPS: ' .. love.timer.getFPS(), 0, 0)
+	love.graphics.print('Memory: ' .. math.floor(collectgarbage 'count') .. ' kb', 0, 16)
 end
