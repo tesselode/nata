@@ -7,6 +7,7 @@ function health:collide(e, other)
 	if e.isEvil == other.isEvil then return false end
 	e.health = e.health - other.damage
 	if e.health <= 0 then
+		self.pool:emit('die', e)
 		e.dead = true
 	end
 end

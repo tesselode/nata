@@ -14,7 +14,8 @@ return function(x, y)
 			reloadTime = 1,
 		},
 		health = 1,
-		damage = 1,
+		damage = 3,
 		isEvil = true,
+		score = 100,
 	}
 end

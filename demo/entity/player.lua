@@ -22,6 +22,8 @@ function Player:new(x, y)
 		entity = PlayerBullet,
 		reloadTime = 1/6,
 	}
+	self.health = 20
+	self.damage = 3
 end
 
 function Player:update(dt)
@@ -42,6 +44,10 @@ function Player:update(dt)
 	self.vy = inputY * 300
 
 	self.shoot.disabled = not love.keyboard.isDown 'z'
+end
+
+function Player:draw()
+	love.graphics.print('Health: ' .. self.health, 0, 80)
 end
 
 return Player
