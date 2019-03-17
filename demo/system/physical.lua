@@ -1,3 +1,8 @@
+--[[
+	this system handles movement and collisions for all entities
+	that have a position and a radius.
+]]
+
 local physical = {}
 
 local function isColliding(a, b)

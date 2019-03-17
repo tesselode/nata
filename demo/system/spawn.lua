@@ -1,3 +1,8 @@
+--[[
+	this system doesn't operate on any entities directly,
+	but it does spawn enemies at regular intervals.
+]]
+
 local Enemy1 = require 'entity.enemy1'
 local Enemy2 = require 'entity.enemy2'
 

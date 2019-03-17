@@ -1,3 +1,8 @@
+--[[
+	this system tracks the player's score and increments when an
+	entity that has a point value dies.
+]]
+
 local score = {}
 
 function score:init()

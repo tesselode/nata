@@ -1,7 +1,13 @@
 local nata = require 'nata'
 local Player = require 'entity.player'
 
+-- set up the entity pool
 local pool = nata.new {
+	--[[
+		define groups. the "all" group contains every entity,
+		and the others include entities that have all the
+		specified fields.
+	]]
 	groups = {
 		all = {},
 		physical = {filter = {'x', 'y', 'r'}},
@@ -9,6 +15,10 @@ local pool = nata.new {
 		health = {filter = {'x', 'y', 'r', 'health', 'damage'}},
 		score = {filter = {'score'}},
 	},
+	--[[
+		define the systems that should be used. systems receive
+		events in the order they're listed.
+	]]
 	systems = {
 		nata.oop 'all',
 		require 'system.spawn',
@@ -19,16 +29,18 @@ local pool = nata.new {
 	},
 }
 
+-- queue up the player entity
 pool:queue(Player(400, 300))
 
+-- this function defines the condition for removing entities
 local function shouldRemove(entity)
 	return entity.dead
 end
 
 function love.update(dt)
-	pool:flush()
-	pool:emit('update', dt)
-	pool:remove(shouldRemove)
+	pool:flush() -- add entities that have been queued up
+	pool:emit('update', dt) -- update systems and entities
+	pool:remove(shouldRemove) -- remove entities that are marked as "dead"
 end
 
 function love.keypressed(key)

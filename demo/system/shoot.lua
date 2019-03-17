@@ -1,6 +1,12 @@
+--[[
+	this system enables shooting behavior for entities.
+	entities can specify a bullet entity to spawn and a cooldown time.
+]]
+
 local shoot = {}
 
 function shoot:add(groupName, e)
+	-- initialize entities that can shoot with a reload timer
 	if groupName ~= 'shoot' then return false end
 	e.shoot.reloadTimer = 0
 end
