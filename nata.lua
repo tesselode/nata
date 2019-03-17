@@ -21,8 +21,8 @@ Pool.__index = Pool
 
 function Pool:_init(options)
 	options = options or {}
-	local groups = options.groups or {entities = {}}
-	local systems = options.systems or {nata.oop 'entities'}
+	local groups = options.groups or {all = {}}
+	local systems = options.systems or {nata.oop 'all'}
 	self._queue = {}
 	self.groups = {}
 	for groupName, groupOptions in pairs(groups) do

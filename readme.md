@@ -44,10 +44,10 @@ Calls the function named `event` on each entity that has one, and passes the add
 
 ### Accessing entities
 ```lua
-for _, entity in ipairs(pool.groups.entities.entities) do
+for _, entity in ipairs(pool.groups.all.entities) do
   -- operate on entities...
 end
-print(pool.groups.entities.hasEntity[entity]) -- check if a group has an entity
+print(pool.groups.all.hasEntity[entity]) -- check if a group has an entity
 ```
 Entities are stored in groups, which you can find in `pool.groups`. Each group has `entities`, an array of all the entities in the group, and `hasEntity`, a table which has each entity in the world as a key (with a dummy value of `true`).
 
