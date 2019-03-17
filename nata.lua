@@ -45,6 +45,7 @@ end
 
 function Pool:queue(entity)
 	table.insert(self._queue, entity)
+	return entity
 end
 
 function Pool:flush()
