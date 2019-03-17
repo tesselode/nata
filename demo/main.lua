@@ -9,6 +9,7 @@ local pool = nata.new {
 	},
 	systems = {
 		nata.oop 'all',
+		require 'system.spawn',
 		require 'system.physical',
 		require 'system.shoot'
 	},
@@ -36,4 +37,5 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print('FPS: ' .. love.timer.getFPS(), 0, 0)
 	love.graphics.print('Memory: ' .. math.floor(collectgarbage 'count') .. ' kb', 0, 16)
+	love.graphics.print('Entities: ' .. #pool.groups.all.entities, 0, 32)
 end
