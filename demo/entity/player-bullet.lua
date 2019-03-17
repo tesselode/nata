@@ -5,5 +5,6 @@ return function(x, y)
 		r = 4,
 		vx = 0,
 		vy = -600,
+		deleteWhenAboveScreen = true,
 	}
 end

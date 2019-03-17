@@ -17,6 +17,7 @@ function Player:new(x, y)
 	self.r = 16
 	self.vx = 0
 	self.vy = 0
+	self.stayOnScreen = true
 	self.shoot = {
 		entity = PlayerBullet,
 		reloadTime = 1/6,
