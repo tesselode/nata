@@ -12,6 +12,9 @@ return function(x, y)
 		shoot = {
 			entity = EnemyBullet,
 			reloadTime = 1,
-		}
+		},
+		health = 1,
+		damage = 1,
+		isEvil = true,
 	}
 end

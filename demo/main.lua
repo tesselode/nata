@@ -6,12 +6,14 @@ local pool = nata.new {
 		all = {},
 		physical = {filter = {'x', 'y', 'r'}},
 		shoot = {filter = {'x', 'y', 'shoot'}},
+		health = {filter = {'x', 'y', 'r', 'health', 'damage'}},
 	},
 	systems = {
 		nata.oop 'all',
 		require 'system.spawn',
 		require 'system.physical',
-		require 'system.shoot'
+		require 'system.shoot',
+		require 'system.health',
 	},
 }
 

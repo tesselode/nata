@@ -7,5 +7,9 @@ return function(x, y)
 		vx = 0,
 		vy = 400,
 		deleteWhenBelowScreen = true,
+		health = 1,
+		damage = 1,
+		isEvil = true,
+		isBullet = true,
 	}
 end
