@@ -1,6 +1,11 @@
 # Nata
 Nata is a Lua library for managing entities in games. It allows you to create **entity pools**, which are containers that hold all the objects in a game, like geometry, characters, and collectibles. At its simplest, pools hold entities and allow you to call functions on them, but they also provide a minimal structure for an Entity Component System organization.
 
+To see Nata in action, open the demo with LÖVE from the base directory:
+```
+love demo
+```
+
 ## Installation
 To use Nata, place `nata.lua` in your project, and then add this code to the files where you use Nata:
 ```lua
@@ -51,7 +56,69 @@ print(pool.groups.all.hasEntity[entity]) -- check if a group has an entity
 ```
 Entities are stored in groups, which you can find in `pool.groups`. Each group has `entities`, an array of all the entities in the group, and `hasEntity`, a table which has each entity in the world as a key (with a dummy value of `true`).
 
-Feel free to read from these tables and sort them. I wouldn't recommend adding or removing entities from these tables manually though; use `queue`/`flush`/`remove` for that.
+Feel free to read from these tables and sort them. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
 ### Sorting entities into more groups
 You can set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group.
+
+You can define groups by passing an options table into `nata.new`:
+```lua
+local pool = nata.new {
+  groups = {
+    all = {},
+    physical = {filter = {'x', 'y', 'w', 'h'}},
+    large = {filter = function(entity)
+      return entity.w > 100 or entity.h > 100
+    end},
+  }
+}
+```
+Filters can be either a table of required keys or a function. You can also leave out the filter, which allows all entities to be added to that group.
+
+### Using systems
+A **system**, generally speaking, defines a behavior that affects entities in certain groups. In Nata, a system is just an instance of a class that receives events from the pool and can call functions on the pool.
+
+A system is defined like this:
+```lua
+local GravitySystem = {}
+
+function GravitySystem:update(dt)
+  for _, e in ipairs(self.pool.groups.gravity.entities) do
+    e.vy = e.vy + e.gravity * dt
+  end
+end
+```
+You can add systems to a pool by including a `systems` table in the options table passed to `nata.new`:
+```lua
+local pool = nata.new {
+  groups = {
+    gravity = {filter = {'gravity'}},
+  },
+  systems = {
+    GravitySystem,
+  },
+}
+```
+Now, when `pool:emit('update', dt)` is called, `GravitySystem:update(dt)` will be called as well.
+
+Also note that the system functions are all self functions - each pool has its own instance of each system "class", and system functions are called with the system instance as the first argument, so you can store data in the systems without affecting the original table. `system.pool` is automatically set to the pool that's using the system instance, so systems can interact with the pool in whatever way is needed.
+
+Note that when the `systems` table is not defined, the pool defaults to having one system: the `nata.oop` system. This system is responsible for calling functions on entities when an event is emitted. If you're defining a list of systems and you want to retain this behavior, you should add `nata.oop(group)` to your systems list, where `group` is the name of the group whose entities you want to call functions on:
+```lua
+local pool = nata.new {
+  groups = {
+    everything = {},
+    gravity = {filter = {'gravity'}},
+  },
+  systems = {
+    nata.oop 'everything',
+    GravitySystem,
+  },
+}
+```
+
+### Special events
+When an entity is added to the world, the `add` event is emitted with two arguments: `groupName`, the name of the group the entity was added to, and `entity`, the entity that was added. When entities are removed from the world, the `remove` event is called with the same arguments.
+
+## Contributing
+Nata is still in early development, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
