@@ -86,6 +86,14 @@ function Pool:emit(event, ...)
 	end
 end
 
+function Pool:getSystem(systemDefinition)
+	for _, system in ipairs(self._systems) do
+		if getmetatable(system).__index == systemDefinition then
+			return system
+		end
+	end
+end
+
 function nata.oop(groupName)
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
