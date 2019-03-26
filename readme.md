@@ -120,5 +120,53 @@ local pool = nata.new {
 ### Special events
 When an entity is added to the world, the `add` event is emitted with two arguments: `groupName`, the name of the group the entity was added to, and `entity`, the entity that was added. When entities are removed from the world, the `remove` event is called with the same arguments.
 
+## API
+```lua
+local pool = nata.new(options, ...)
+```
+Creates a new entity pool.
+- `options` (optional) - a table of options to set up the pool with. The table should have the following contents:
+  - `groups` (optional) - a table of groups the sort entities into. Defaults to `{all = {}}`. Each key is the name of the group, and the value is a table with the following contents:
+    - `filter` (optional) - the requirement for entities to be added to this group. It can either be a list of required keys or a function that takes an entity as the first argument and returns if the entity should be added to the group. If no filter is specified, all entities will be added to the group.
+    - `sort` (optional) - a function that defines how entities will be sorted. The function works the same way as the as the function argument for `table.sort`.
+  - `systems` (optional) - a table of systems that should operate on the pool. Defaults to `nata.oop('all')`.
+- `...` - additional arguments that will be used when the `init` event is emitted.
+
+```lua
+pool:queue(entity)
+```
+Queues an entity to be added to the pool.
+- `entity` - the entity to queue
+
+```lua
+pool:flush()
+```
+Adds all of the queued entities to the pool (in the order they were queued). `pool:emit('add', entity)` will be called for each entity that's added.
+
+```lua
+pool:remove(f)
+```
+Removes all entities that meet the specified condition.
+- `f` - a function that takes an entity as an argument and returns `true` if the entity should be removed.
+
+```lua
+pool:emit(event, ...)
+```
+Calls the function named `event` on each system that has it.
+- `event` - the name of the function to call
+- `...` - additional arguments to pass to the system's functions
+
+```lua
+pool:getSystem(systemDefinition)
+```
+Gets the pool's instance of a certain system.
+- `systemDefinition` - the table that was used to add the system to the pool
+
+```lua
+local oopSystem = nata.oop(groupName)
+```
+Creates a system that receives events and calls the function of the same name on the entities themselves.
+- `groupName` - the group of entities to call functions on
+
 ## Contributing
 Nata is still in early development, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
