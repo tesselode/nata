@@ -40,6 +40,7 @@ This removes every entity for which `f(entity)` returns true, where `f` is a use
 ```lua
 pool:remove(function(entity) return entity.dead end)
 ```
+The `remove` function will also be called on those entities, if they have one.
 
 ### Emitting events
 ```lua
@@ -58,7 +59,7 @@ Entities are stored in groups, which you can find in `pool.groups`. Each group h
 
 Feel free to read from these tables and sort them. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
-### Sorting entities into more groups
+### Organizing entities into groups
 You can set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group.
 
 You can define groups by passing an options table into `nata.new`:
@@ -82,9 +83,13 @@ A system is defined like this:
 ```lua
 local GravitySystem = {}
 
+function GravitySystem:init()
+  self.baseGravity = 100
+end
+
 function GravitySystem:update(dt)
   for _, e in ipairs(self.pool.groups.gravity.entities) do
-    e.vy = e.vy + e.gravity * dt
+    e.vy = e.vy + self.baseGravity * e.gravity * dt
   end
 end
 ```
@@ -101,7 +106,7 @@ local pool = nata.new {
 ```
 Now, when `pool:emit('update', dt)` is called, `GravitySystem:update(dt)` will be called as well.
 
-Also note that the system functions are all self functions - each pool has its own instance of each system "class", and system functions are called with the system instance as the first argument, so you can store data in the systems without affecting the original table. `system.pool` is automatically set to the pool that's using the system instance, so systems can interact with the pool in whatever way is needed.
+Also note that the system functions are all self functions - each pool creates "instances" of each system "class", so systems can hold their own internal state. Each system also has `self.pool`, which allows access to all pool functions and properties.
 
 Note that when the `systems` table is not defined, the pool defaults to having one system: the `nata.oop` system. This system is responsible for calling functions on entities when an event is emitted. If you're defining a list of systems and you want to retain this behavior, you should add `nata.oop(group)` to your systems list, where `group` is the name of the group whose entities you want to call functions on:
 ```lua
@@ -116,9 +121,6 @@ local pool = nata.new {
   },
 }
 ```
-
-### Special events
-When an entity is added to the world, the `add` event is emitted with two arguments: `groupName`, the name of the group the entity was added to, and `entity`, the entity that was added. When entities are removed from the world, the `remove` event is called with the same arguments.
 
 ## API
 ```lua
@@ -146,7 +148,7 @@ Adds all of the queued entities to the pool (in the order they were queued). `po
 ```lua
 pool:remove(f)
 ```
-Removes all entities that meet the specified condition.
+Removes all entities that meet the specified condition. `pool:emit('remove', entity)` will be called for each entity that's removed.
 - `f` - a function that takes an entity as an argument and returns `true` if the entity should be removed.
 
 ```lua
