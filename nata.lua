@@ -19,7 +19,7 @@ end
 local Pool = {}
 Pool.__index = Pool
 
-function Pool:_init(options)
+function Pool:_init(options, ...)
 	options = options or {}
 	local groups = options.groups or {all = {}}
 	local systems = options.systems or {nata.oop 'all'}
@@ -40,7 +40,7 @@ function Pool:_init(options)
 		}, {__index = systemDefinition})
 		table.insert(self._systems, system)
 	end
-	self:emit 'init'
+	self:emit('init', ...)
 end
 
 function Pool:queue(entity)
