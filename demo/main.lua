@@ -9,7 +9,6 @@ local pool = nata.new {
 		specified fields.
 	]]
 	groups = {
-		all = {},
 		physical = {filter = {'x', 'y', 'r'}},
 		shoot = {filter = {'x', 'y', 'shoot'}},
 		health = {filter = {'x', 'y', 'r', 'health', 'damage'}},
@@ -20,7 +19,7 @@ local pool = nata.new {
 		events in the order they're listed.
 	]]
 	systems = {
-		nata.oop 'all',
+		nata.oop(),
 		require 'system.spawn',
 		require 'system.physical',
 		require 'system.shoot',
@@ -53,5 +52,5 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print('FPS: ' .. love.timer.getFPS(), 0, 0)
 	love.graphics.print('Memory: ' .. math.floor(collectgarbage 'count') .. ' kb', 0, 16)
-	love.graphics.print('Entities: ' .. #pool.groups.all.entities, 0, 32)
+	love.graphics.print('Entities: ' .. #pool.entities, 0, 32)
 end

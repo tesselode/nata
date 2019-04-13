@@ -27,6 +27,12 @@ local nata = {
 	]]
 }
 
+local function removeByValue(t, v)
+	for i = #t, 1, -1 do
+		if t[i] == v then table.remove(t, i) end
+	end
+end
+
 local function entityHasKeys(entity, keys)
 	for _, key in ipairs(keys) do
 		if not entity[key] then return false end
@@ -48,9 +54,11 @@ Pool.__index = Pool
 
 function Pool:_init(options, ...)
 	options = options or {}
-	local groups = options.groups or {all = {}}
-	local systems = options.systems or {nata.oop 'all'}
+	local groups = options.groups or {}
+	local systems = options.systems or {nata.oop()}
 	self._queue = {}
+	self.entities = {}
+	self.hasEntity = {}
 	self.groups = {}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
@@ -78,29 +86,33 @@ end
 function Pool:flush()
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
-		for groupName, group in pairs(self.groups) do
+		table.insert(self.entities, entity)
+		self.hasEntity[entity] = true
+		for _, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
 				table.insert(group.entities, entity)
 				if group.sort then
 					table.sort(group.entities, group.sort)
 				end
 				group.hasEntity[entity] = true
-				self:emit('add', groupName, entity)
 			end
 		end
+		self:emit('add', entity)
 		self._queue[i] = nil
 	end
 end
 
 function Pool:remove(f)
-	for groupName, group in pairs(self.groups) do
-		for i = #group.entities, 1, -1 do
-			local entity = group.entities[i]
-			if f(entity) then
-				table.remove(group.entities, i)
+	for i = #self.entities, 1, -1 do
+		local entity = self.entities[i]
+		if f(entity) then
+			self:emit('remove', entity)
+			for _, group in pairs(self.groups) do
+				removeByValue(group.entities, entity)
 				group.hasEntity[entity] = nil
-				self:emit('remove', groupName, entity)
 			end
+			table.remove(self.entities, i)
+			self.hasEntity[entity] = nil
 		end
 	end
 end
@@ -125,7 +137,8 @@ function nata.oop(groupName)
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
 			t._cache[event] = t._cache[event] or function(self, ...)
-				for _, entity in ipairs(self.pool.groups[groupName].entities) do
+				local entities = groupName and self.pool.groups[groupName].entities or self.pool.entities
+				for _, entity in ipairs(entities) do
 					if type(entity[event]) == 'function' then
 						entity[event](entity, ...)
 					end
