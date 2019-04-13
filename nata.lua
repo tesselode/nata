@@ -125,6 +125,27 @@ function Pool:emit(event, ...)
 	end
 end
 
+function Pool:refresh(flag)
+	for _, entity in ipairs(self.entities) do
+		if entity[flag] then
+			entity[flag] = nil
+			for _, group in pairs(self.groups) do
+				local belongsInGroup = filterEntity(entity, group.filter)
+				if belongsInGroup and not group.hasEntity[entity] then
+					table.insert(group.entities, entity)
+					if group.sort then
+						table.sort(group.entities, group.sort)
+					end
+					group.hasEntity[entity] = true
+				elseif not belongsInGroup and group.hasEntity[entity] then
+					removeByValue(group.entities, entity)
+					group.hasEntity[entity] = nil
+				end
+			end
+		end
+	end
+end
+
 function Pool:getSystem(systemDefinition)
 	for _, system in ipairs(self._systems) do
 		if getmetatable(system).__index == systemDefinition then

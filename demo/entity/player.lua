@@ -51,7 +51,9 @@ function Player:update(dt)
 	self.vx = inputX * 300
 	self.vy = inputY * 300
 
-	self.shoot.disabled = not love.keyboard.isDown 'z'
+	if self.shoot then
+		self.shoot.disabled = not love.keyboard.isDown 'z'
+	end
 end
 
 function Player:draw()

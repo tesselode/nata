@@ -29,7 +29,7 @@ local pool = nata.new {
 }
 
 -- queue up the player entity
-pool:queue(Player(400, 300))
+local player = pool:queue(Player(400, 300))
 
 -- this function defines the condition for removing entities
 local function shouldRemove(entity)
@@ -38,12 +38,23 @@ end
 
 function love.update(dt)
 	pool:flush() -- add entities that have been queued up
+	pool:refresh 'componentsChanged'
 	pool:emit('update', dt) -- update systems and entities
 	pool:remove(shouldRemove) -- remove entities that are marked as "dead"
 end
 
 function love.keypressed(key)
 	if key == 'escape' then love.event.quit() end
+	if key == 'space' then
+		if player.shoot then
+			player.shootDisabled = player.shoot
+			player.shoot = nil
+		elseif player.shootDisabled then
+			player.shoot = player.shootDisabled
+			player.shootDisabled = nil
+		end
+		player.componentsChanged = true
+	end
 end
 
 function love.draw()
