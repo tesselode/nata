@@ -78,6 +78,19 @@ function Pool:_init(options, ...)
 	self:emit('init', ...)
 end
 
+function Pool:_addToGroup(group, entity)
+	table.insert(group.entities, entity)
+	if group.sort then
+		table.sort(group.entities, group.sort)
+	end
+	group.hasEntity[entity] = true
+end
+
+function Pool:_removeFromGroup(group, entity)
+	removeByValue(group.entities, entity)
+	group.hasEntity[entity] = nil
+end
+
 function Pool:queue(entity)
 	table.insert(self._queue, entity)
 	return entity
@@ -90,11 +103,7 @@ function Pool:flush()
 		self.hasEntity[entity] = true
 		for _, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
-				table.insert(group.entities, entity)
-				if group.sort then
-					table.sort(group.entities, group.sort)
-				end
-				group.hasEntity[entity] = true
+				self:_addToGroup(group, entity)
 			end
 		end
 		self:emit('add', entity)
@@ -108,8 +117,9 @@ function Pool:remove(f)
 		if f(entity) then
 			self:emit('remove', entity)
 			for _, group in pairs(self.groups) do
-				removeByValue(group.entities, entity)
-				group.hasEntity[entity] = nil
+				if group.hasEntity[entity] then
+					self:_removeFromGroup(group, entity)
+				end
 			end
 			table.remove(self.entities, i)
 			self.hasEntity[entity] = nil
@@ -132,14 +142,9 @@ function Pool:refresh(flag)
 			for _, group in pairs(self.groups) do
 				local belongsInGroup = filterEntity(entity, group.filter)
 				if belongsInGroup and not group.hasEntity[entity] then
-					table.insert(group.entities, entity)
-					if group.sort then
-						table.sort(group.entities, group.sort)
-					end
-					group.hasEntity[entity] = true
+					self:_addToGroup(group, entity)
 				elseif not belongsInGroup and group.hasEntity[entity] then
-					removeByValue(group.entities, entity)
-					group.hasEntity[entity] = nil
+					self:_removeFromGroup(group, entity)
 				end
 			end
 		end
