@@ -41,9 +41,17 @@ local function shouldRemove(entity)
 	return entity.dead
 end
 
+local function shouldRefresh(entity)
+	if entity.componentsChanged then
+		entity.componentsChanged = false
+		return true
+	end
+	return false
+end
+
 function love.update(dt)
 	pool:flush() -- add entities that have been queued up
-	pool:refresh 'componentsChanged'
+	pool:refresh(shouldRefresh)
 	pool:emit('update', dt) -- update systems and entities
 	pool:remove(shouldRemove) -- remove entities that are marked as "dead"
 end

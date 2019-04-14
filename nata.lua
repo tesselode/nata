@@ -153,10 +153,9 @@ function Pool:emit(event, ...)
 	end
 end
 
-function Pool:refresh(flag)
+function Pool:refresh(f)
 	for _, entity in ipairs(self.entities) do
-		if entity[flag] then
-			entity[flag] = nil
+		if f(entity) then
 			for _, group in pairs(self.groups) do
 				local belongsInGroup = filterEntity(entity, group.filter)
 				if belongsInGroup and not group.hasEntity[entity] then
