@@ -53,13 +53,15 @@ local Pool = {}
 Pool.__index = Pool
 
 function Pool:_init(options, ...)
-	options = options or {}
-	local groups = options.groups or {}
-	local systems = options.systems or {nata.oop()}
 	self._queue = {}
 	self.entities = {}
 	self.hasEntity = {}
 	self.groups = {}
+	self._systems = {}
+	self._events = {}
+	options = options or {}
+	local groups = options.groups or {}
+	local systems = options.systems or {nata.oop()}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
 			filter = groupOptions.filter,
@@ -68,7 +70,6 @@ function Pool:_init(options, ...)
 			hasEntity = {},
 		}
 	end
-	self._systems = {}
 	for _, systemDefinition in ipairs(systems) do
 		local system = setmetatable({
 			pool = self,
@@ -127,10 +128,27 @@ function Pool:remove(f)
 	end
 end
 
+function Pool:on(event, f)
+	self._events[event] = self._events[event] or {}
+	table.insert(self._events[event], f)
+	return f
+end
+
+function Pool:off(event, f)
+	if self._events[event] then
+		removeByValue(self._events[event], f)
+	end
+end
+
 function Pool:emit(event, ...)
 	for _, system in ipairs(self._systems) do
 		if type(system[event]) == 'function' then
 			system[event](system, ...)
+		end
+	end
+	if self._events[event] then
+		for _, f in ipairs(self._events[event]) do
+			f(...)
 		end
 	end
 end

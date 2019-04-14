@@ -28,6 +28,11 @@ local pool = nata.new {
 	},
 }
 
+local testEvent = pool:on('collide', function()
+	love.event.quit()
+end)
+pool:off('collide', testEvent)
+
 -- queue up the player entity
 local player = pool:queue(Player(400, 300))
 
