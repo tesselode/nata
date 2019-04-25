@@ -104,26 +104,20 @@ end
 function Pool:flush()
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
-		if self.hasEntity[entity] then
-			-- if the entity is already in the pool,
-			-- re-check which groups the entity belongs in
-			for groupName, group in pairs(self.groups) do
-				local belongsInGroup = filterEntity(entity, group.filter)
-				if belongsInGroup and not group.hasEntity[entity] then
-					self:_addToGroup(groupName, entity)
-				elseif not belongsInGroup and group.hasEntity[entity] then
-					self:_removeFromGroup(groupName, entity)
-				end
+		-- check if the entity belongs in each group and
+		-- add it to/remove it from the group as needed
+		for groupName, group in pairs(self.groups) do
+			local belongsInGroup = filterEntity(entity, group.filter)
+			if belongsInGroup and not group.hasEntity[entity] then
+				self:_addToGroup(groupName, entity)
+			elseif not belongsInGroup and group.hasEntity[entity] then
+				self:_removeFromGroup(groupName, entity)
 			end
-		else
-			-- otherwise, add the entity to the pool
+		end
+		-- add the entity to the pool if it hasn't been added already
+		if not self.hasEntity[entity] then
 			table.insert(self.entities, entity)
 			self.hasEntity[entity] = true
-			for groupName, group in pairs(self.groups) do
-				if filterEntity(entity, group.filter) then
-					self:_addToGroup(groupName, entity)
-				end
-			end
 			self:emit('add', entity)
 		end
 		self._queue[i] = nil
