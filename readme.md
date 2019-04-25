@@ -68,10 +68,15 @@ Filters can be either a table of required keys or a function. You can also leave
 ```lua
 -- iterate through all entities
 for _, entity in ipairs(pool.entities) do end
+
 -- iterate through the physical group
 for _, entity in ipairs(pool.groups.physical.entities) do end
-print(pool.hasEntity[entity]) -- check if the pool has an entity
-print(pool.groups.physical.hasEntity[entity]) -- check if a specific group has an entity
+
+-- check if the pool has an entity
+print(pool.hasEntity[entity])
+
+-- check if a specific group has an entity
+print(pool.groups.physical.hasEntity[entity])
 ```
 Feel free to read from the `entities` and `hasEntity` tables directly. You can also sort the `entities` tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
