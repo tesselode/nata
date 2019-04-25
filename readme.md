@@ -127,18 +127,15 @@ local pool = nata.new {
 When called without any arguments, `nata.oop` will create a system that operates on every entity in the pool. If you want it to only operate on a specific group, you can use `nata.oop(groupName)`.
 
 ### Re-checking the groups an entity belongs to
-Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but you can tell them by using `pool.refresh`.
-```lua
-pool:refresh(function(entity)
-  if entity.componentsChanged then
-    entity.componentsChanged = false
-    return true
-  end
-  return false
-end)
-```
+Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but if you queue the entity again, then when the entity is flushed, the pool will re-check which groups the entity belongs to.
 
-`pool.refresh` takes one argument: a function that takes an entity as an argument and returns whether the entity should be re-sorted into groups. In this example, the pool will refresh any entity that has `componentsChanged` set to true, and then unset that flag for those entities.
+### Special events
+Pools emit certain events automatically at certain times:
+- `pool:emit('init', ...)` - called when the pool is created. `...` are additional arguments (after the options table) passed to `nata.new`.
+- `pool:emit('add', entity)` - called when an entity is added to the pool.
+- `pool:emit('remove', entity)` - called when an entity is removed from the pool.
+- `pool:emit('addToGroup', groupName, entity`) - called when an entity is added to a group.
+- `pool:emit('removeFromGroup', groupName, entity`) - called when an entity is removed from a group.
 
 ### Listening for events from outside the pool
 Any system in a pool will automatically receive events that the pool emits. However, it can be useful to listen for events in a piece of code that isn't one the pool's systems. You can trigger any function when a certain event occurs using `pool.on`:
@@ -167,24 +164,18 @@ Creates a new entity pool.
 ```lua
 local entity = pool:queue(entity)
 ```
-Queues an entity to be added to the pool and returns the entity that was queued.
+Queues an entity to be added to the pool and returns the entity that was queued. If the entity is already in the pool, the pool will re-check which groups the entity belongs in and add it to/remove it from groups as needed.
 - `entity` - the entity to queue
 
 ```lua
 pool:flush()
 ```
-Adds all of the queued entities to the pool (in the order they were queued). `pool:emit('add', entity)` will be called for each entity that's added.
-
-```lua
-pool:refresh(f)
-```
-For each entity that meets the specified condition, re-checks which groups the entity belongs to and adds it to and removes it from groups as necessary.
-- `f` - a function that takes an entity as an argument and returns `true` if the entity should be re-checked.
+Adds/re-checks all of the queued entities (in the order they were queued).
 
 ```lua
 pool:remove(f)
 ```
-Removes all entities that meet the specified condition. `pool:emit('remove', entity)` will be called for each entity that's removed.
+Removes all entities that meet the specified condition.
 - `f` - a function that takes an entity as an argument and returns `true` if the entity should be removed.
 
 ```lua
