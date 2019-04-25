@@ -8,7 +8,7 @@
 
 local PlayerBullet = require 'entity.player-bullet'
 
-local Player = {}
+local Player = {isPlayer = true}
 Player.__index = Player
 
 setmetatable(Player, {

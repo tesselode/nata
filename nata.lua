@@ -79,17 +79,21 @@ function Pool:_init(options, ...)
 	self:emit('init', ...)
 end
 
-function Pool:_addToGroup(group, entity)
+function Pool:_addToGroup(groupName, entity)
+	local group = self.groups[groupName]
 	table.insert(group.entities, entity)
 	if group.sort then
 		table.sort(group.entities, group.sort)
 	end
 	group.hasEntity[entity] = true
+	self:emit('addToGroup', groupName, entity)
 end
 
-function Pool:_removeFromGroup(group, entity)
+function Pool:_removeFromGroup(groupName, entity)
+	local group = self.groups[groupName]
 	removeByValue(group.entities, entity)
 	group.hasEntity[entity] = nil
+	self:emit('removeFromGroup', groupName, entity)
 end
 
 function Pool:queue(entity)
@@ -100,14 +104,28 @@ end
 function Pool:flush()
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
-		table.insert(self.entities, entity)
-		self.hasEntity[entity] = true
-		for _, group in pairs(self.groups) do
-			if filterEntity(entity, group.filter) then
-				self:_addToGroup(group, entity)
+		if self.hasEntity[entity] then
+			-- if the entity is already in the pool,
+			-- re-check which groups the entity belongs in
+			for groupName, group in pairs(self.groups) do
+				local belongsInGroup = filterEntity(entity, group.filter)
+				if belongsInGroup and not group.hasEntity[entity] then
+					self:_addToGroup(groupName, entity)
+				elseif not belongsInGroup and group.hasEntity[entity] then
+					self:_removeFromGroup(groupName, entity)
+				end
 			end
+		else
+			-- otherwise, add the entity to the pool
+			table.insert(self.entities, entity)
+			self.hasEntity[entity] = true
+			for groupName, group in pairs(self.groups) do
+				if filterEntity(entity, group.filter) then
+					self:_addToGroup(groupName, entity)
+				end
+			end
+			self:emit('add', entity)
 		end
-		self:emit('add', entity)
 		self._queue[i] = nil
 	end
 end
@@ -117,9 +135,9 @@ function Pool:remove(f)
 		local entity = self.entities[i]
 		if f(entity) then
 			self:emit('remove', entity)
-			for _, group in pairs(self.groups) do
+			for groupName, group in pairs(self.groups) do
 				if group.hasEntity[entity] then
-					self:_removeFromGroup(group, entity)
+					self:_removeFromGroup(groupName, entity)
 				end
 			end
 			table.remove(self.entities, i)
@@ -149,21 +167,6 @@ function Pool:emit(event, ...)
 	if self._events[event] then
 		for _, f in ipairs(self._events[event]) do
 			f(...)
-		end
-	end
-end
-
-function Pool:refresh(f)
-	for _, entity in ipairs(self.entities) do
-		if f(entity) then
-			for _, group in pairs(self.groups) do
-				local belongsInGroup = filterEntity(entity, group.filter)
-				if belongsInGroup and not group.hasEntity[entity] then
-					self:_addToGroup(group, entity)
-				elseif not belongsInGroup and group.hasEntity[entity] then
-					self:_removeFromGroup(group, entity)
-				end
-			end
 		end
 	end
 end
