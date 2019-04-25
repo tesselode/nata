@@ -48,25 +48,13 @@ pool:emit(event, ...)
 ```
 Calls the function named `event` on each entity that has one, and passes the additional arguments `...` to that function.
 
-### Accessing entities
-```lua
-for _, entity in ipairs(pool.groups.all.entities) do
-  -- operate on entities...
-end
-print(pool.groups.all.hasEntity[entity]) -- check if a group has an entity
-```
-Entities are stored in groups, which you can find in `pool.groups`. Each group has `entities`, an array of all the entities in the group, and `hasEntity`, a table which has each entity in the world as a key (with a dummy value of `true`).
-
-Feel free to read from these tables and sort them. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
-
 ### Organizing entities into groups
-You can set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group.
+By default, pools store every entity in a single collection, but you can also set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group.
 
 You can define groups by passing an options table into `nata.new`:
 ```lua
 local pool = nata.new {
   groups = {
-    all = {},
     physical = {filter = {'x', 'y', 'w', 'h'}},
     large = {filter = function(entity)
       return entity.w > 100 or entity.h > 100
@@ -75,6 +63,17 @@ local pool = nata.new {
 }
 ```
 Filters can be either a table of required keys or a function. You can also leave out the filter, which allows all entities to be added to that group.
+
+### Accessing entities
+```lua
+-- iterate through all entities
+for _, entity in ipairs(pool.entities) do end
+-- iterate through the physical group
+for _, entity in ipairs(pool.groups.physical.entities) do end
+print(pool.hasEntity[entity]) -- check if the pool has an entity
+print(pool.groups.physical.hasEntity[entity]) -- check if a specific group has an entity
+```
+Feel free to read from the `entities` and `hasEntity` tables directly. You can also sort the `entities` tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
 ### Using systems
 A **system**, generally speaking, defines a behavior that affects entities in certain groups. In Nata, a system is just an instance of a class that receives events from the pool and can call functions on the pool.
@@ -108,18 +107,44 @@ Now, when `pool:emit('update', dt)` is called, `GravitySystem:update(dt)` will b
 
 Also note that the system functions are all self functions - each pool creates "instances" of each system "class", so systems can hold their own internal state. Each system also has `self.pool`, which allows access to all pool functions and properties.
 
-Note that when the `systems` table is not defined, the pool defaults to having one system: the `nata.oop` system. This system is responsible for calling functions on entities when an event is emitted. If you're defining a list of systems and you want to retain this behavior, you should add `nata.oop(group)` to your systems list, where `group` is the name of the group whose entities you want to call functions on:
+Note that when the `systems` table is not defined, the pool defaults to having one system: the `nata.oop` system. This system is responsible for calling functions on entities when an event is emitted. If you're defining a list of systems and you want to retain this behavior, you should add `nata.oop()` to your systems list.
 ```lua
 local pool = nata.new {
   groups = {
-    everything = {},
     gravity = {filter = {'gravity'}},
   },
   systems = {
-    nata.oop 'everything',
+    nata.oop(),
     GravitySystem,
   },
 }
+```
+When called without any arguments, `nata.oop` will create a system that operates on every entity in the pool. If you want it to only operate on a specific group, you can use `nata.oop(groupName)`.
+
+### Re-checking the groups an entity belongs to
+Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but you can tell them by using `pool.refresh`.
+```lua
+pool:refresh(function(entity)
+  if entity.componentsChanged then
+    entity.componentsChanged = false
+    return true
+  end
+  return false
+end)
+```
+
+`pool.refresh` takes one argument: a function that takes an entity as an argument and returns whether the entity should be re-sorted into groups. In this example, the pool will refresh any entity that has `componentsChanged` set to true, and then unset that flag for those entities.
+
+### Listening for events from outside the pool
+Any system in a pool will automatically receive events that the pool emits. However, it can be useful to listen for events in a piece of code that isn't one the pool's systems. You can trigger any function when a certain event occurs using `pool.on`:
+```lua
+local listener = pool:on('quitGame', function()
+  love.event.quit()
+end)
+```
+In this example, when the pool emits the `quitGame` event, the game will be closed. If you want to undo this later, you can use `pool.off`:
+```lua
+pool:off('quitGame', listener)
 ```
 
 ## API
@@ -131,19 +156,25 @@ Creates a new entity pool.
   - `groups` (optional) - a table of groups the sort entities into. Defaults to `{all = {}}`. Each key is the name of the group, and the value is a table with the following contents:
     - `filter` (optional) - the requirement for entities to be added to this group. It can either be a list of required keys or a function that takes an entity as the first argument and returns if the entity should be added to the group. If no filter is specified, all entities will be added to the group.
     - `sort` (optional) - a function that defines how entities will be sorted. The function works the same way as the as the function argument for `table.sort`.
-  - `systems` (optional) - a table of systems that should operate on the pool. Defaults to `nata.oop('all')`.
+  - `systems` (optional) - a table of systems that should operate on the pool. Defaults to `nata.oop()`.
 - `...` - additional arguments that will be used when the `init` event is emitted.
 
 ```lua
-pool:queue(entity)
+local entity = pool:queue(entity)
 ```
-Queues an entity to be added to the pool.
+Queues an entity to be added to the pool and returns the entity that was queued.
 - `entity` - the entity to queue
 
 ```lua
 pool:flush()
 ```
 Adds all of the queued entities to the pool (in the order they were queued). `pool:emit('add', entity)` will be called for each entity that's added.
+
+```lua
+pool:refresh(f)
+```
+For each entity that meets the specified condition, re-checks which groups the entity belongs to and adds it to and removes it from groups as necessary.
+- `f` - a function that takes an entity as an argument and returns `true` if the entity should be re-checked.
 
 ```lua
 pool:remove(f)
@@ -157,6 +188,20 @@ pool:emit(event, ...)
 Calls the function named `event` on each system that has it.
 - `event` - the name of the function to call
 - `...` - additional arguments to pass to the system's functions
+
+```lua
+local f = pool:on(event, f)
+```
+Registers a function to be called when the specified event is emitted. Returns the registered function.
+- `event` - the event to listen for
+- `f` - the function to call
+
+```lua
+pool:off(event, f)
+```
+Unregisters a function from an event.
+- `event` - the event to unregister from
+- `f` - the function to unregister
 
 ```lua
 pool:getSystem(systemDefinition)
