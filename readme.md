@@ -49,20 +49,25 @@ pool:emit(event, ...)
 Calls the function named `event` on each entity that has one, and passes the additional arguments `...` to that function.
 
 ### Organizing entities into groups
-By default, pools store every entity in a single collection, but you can also set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group.
+By default, pools store every entity in a single collection, but you can also set up additional groups to organize entities into. Each group can have its own **filter**, which determines which entities will be added to that group. Groups can also have a `sort` function, which is used to sort the entities in the group whenever a new one is added.
 
 You can define groups by passing an options table into `nata.new`:
 ```lua
 local pool = nata.new {
   groups = {
     physical = {filter = {'x', 'y', 'w', 'h'}},
-    large = {filter = function(entity)
-      return entity.w > 100 or entity.h > 100
-    end},
+    large = {
+      filter = function(entity)
+        return entity.w > 100 or entity.h > 100
+      end,
+      sort = function(a, b)
+        return a.w + a.h < b.w + b.h
+      end,
+    },
   }
 }
 ```
-Filters can be either a table of required keys or a function. You can also leave out the filter, which allows all entities to be added to that group.
+Filters can be either a table of required keys or a function. You can also leave out the filter, which allows all entities to be added to that group. The sort function works the same way as the second argument to `table.sort`.
 
 ### Accessing entities
 ```lua
@@ -124,10 +129,24 @@ local pool = nata.new {
   },
 }
 ```
-When called without any arguments, `nata.oop` will create a system that operates on every entity in the pool. If you want it to only operate on a specific group, you can use `nata.oop(groupName)`.
+When called without any arguments, `nata.oop` will create a system that operates on every entity in the pool. If you want it to only operate on a specific group, you can pass an options table to `nata.oop` with a `group` field. You can also whitelist or blacklist events for the system to forward to entities using `include` and `exclude`. In this example, the `nata.oop` system will only operate on entities in the gravity group, and it won't call the draw event on those entities.
+```lua
+  local pool = nata.new {
+  groups = {
+    gravity = {filter = {'gravity'}},
+  },
+  systems = {
+    nata.oop {
+      group = 'gravity',
+      exclude = {'draw'},
+    },
+    GravitySystem,
+  },
+}
+```
 
-### Re-checking the groups an entity belongs to
-Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but if you queue the entity again, then when the entity is flushed, the pool will re-check which groups the entity belongs to.
+### Updating and re-sorting groups
+Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but if you queue the entity again, then when the entity is flushed, the pool will re-check which groups the entity belongs to. Groups containing the queued entity will also re-sort their entities even if the queued entity was already in the group, so you can use this to sort groups at any time.
 
 ### Special events
 Pools emit certain events automatically at certain times:
@@ -149,6 +168,9 @@ In this example, when the pool emits the `quitGame` event, the game will be clos
 pool:off('quitGame', listener)
 ```
 
+### Pool data
+Each pool has a `data` field, which by default is an empty table. You can set it to anything you want by defining a `data` field in the options table passed to `nata.new`. This happens before the "init" event is called, so systems can use the data in the `init` function. Besides this, Nata doesn't use the data field in any way, so feel free to use it for whatever you want.
+
 ## API
 ```lua
 local pool = nata.new(options, ...)
@@ -158,13 +180,14 @@ Creates a new entity pool.
   - `groups` (optional) - a table of groups the sort entities into. Defaults to `{all = {}}`. Each key is the name of the group, and the value is a table with the following contents:
     - `filter` (optional) - the requirement for entities to be added to this group. It can either be a list of required keys or a function that takes an entity as the first argument and returns if the entity should be added to the group. If no filter is specified, all entities will be added to the group.
     - `sort` (optional) - a function that defines how entities will be sorted. The function works the same way as the as the function argument for `table.sort`.
+    - `data` (optional) - a value to set `pool.data` to. Defaults to an empty table.
   - `systems` (optional) - a table of systems that should operate on the pool. Defaults to `nata.oop()`.
 - `...` - additional arguments that will be used when the `init` event is emitted.
 
 ```lua
 local entity = pool:queue(entity)
 ```
-Queues an entity to be added to the pool and returns the entity that was queued. If the entity is already in the pool, the pool will re-check which groups the entity belongs in and add it to/remove it from groups as needed.
+Queues an entity to be added to the pool and returns the entity that was queued. If the entity is already in the pool, the pool will re-check which groups the entity belongs in and add it to/remove it from groups as needed. Any group with a sort function that contains this entity will re-sort its entities list.
 - `entity` - the entity to queue
 
 ```lua
