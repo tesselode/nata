@@ -81,19 +81,23 @@ end
 
 function Pool:_addToGroup(groupName, entity)
 	local group = self.groups[groupName]
-	table.insert(group.entities, entity)
+	if not group.hasEntity[entity] then
+		table.insert(group.entities, entity)
+		group.hasEntity[entity] = true
+		self:emit('addToGroup', groupName, entity)
+	end
 	if group.sort then
 		table.sort(group.entities, group.sort)
 	end
-	group.hasEntity[entity] = true
-	self:emit('addToGroup', groupName, entity)
 end
 
 function Pool:_removeFromGroup(groupName, entity)
 	local group = self.groups[groupName]
-	removeByValue(group.entities, entity)
-	group.hasEntity[entity] = nil
-	self:emit('removeFromGroup', groupName, entity)
+	if group.hasEntity[entity] then
+		removeByValue(group.entities, entity)
+		group.hasEntity[entity] = nil
+		self:emit('removeFromGroup', groupName, entity)
+	end
 end
 
 function Pool:queue(entity)
@@ -107,10 +111,9 @@ function Pool:flush()
 		-- check if the entity belongs in each group and
 		-- add it to/remove it from the group as needed
 		for groupName, group in pairs(self.groups) do
-			local belongsInGroup = filterEntity(entity, group.filter)
-			if belongsInGroup and not group.hasEntity[entity] then
+			if filterEntity(entity, group.filter) then
 				self:_addToGroup(groupName, entity)
-			elseif not belongsInGroup and group.hasEntity[entity] then
+			else
 				self:_removeFromGroup(groupName, entity)
 			end
 		end
