@@ -229,10 +229,13 @@ Gets the pool's instance of a certain system.
 - `systemDefinition` - the table that was used to add the system to the pool
 
 ```lua
-local oopSystem = nata.oop(groupName)
+local oopSystem = nata.oop(options)
 ```
 Creates a system that receives events and calls the function of the same name on the entities themselves.
-- `groupName` - the group of entities to call functions on
+- `options` (optional) - a table of options for customizing the behavior of the system. The table should have the following contents:
+  - `group` (optional) - the name of the group of entities to call functions on
+  - `include` (optional) - a list of events to forward to entities. If defined, only these events will be forwarded.
+  - `exclude` (optional) - a list of events not to forward to entities.
 
 ## Contributing
-Nata is still in early development, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
+Nata is still rapidly changing, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
