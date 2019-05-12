@@ -176,14 +176,38 @@ function Pool:getSystem(systemDefinition)
 	end
 end
 
-function nata.oop(groupName)
+function nata.oop(options)
+	local group = options and options.group
+	local include, exclude
+	if options and options.include then
+		include = {}
+		for _, event in ipairs(options.include) do
+			include[event] = true
+		end
+	end
+	if options and options.exclude then
+		exclude = {}
+		for _, event in ipairs(options.exclude) do
+			exclude[event] = true
+		end
+	end
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
 			t._cache[event] = t._cache[event] or function(self, ...)
-				local entities = groupName and self.pool.groups[groupName].entities or self.pool.entities
-				for _, entity in ipairs(entities) do
-					if type(entity[event]) == 'function' then
-						entity[event](entity, ...)
+				local shouldCallEvent = true
+				if include and not include[event] then shouldCallEvent = false end
+				if exclude and exclude[event] then shouldCallEvent = false end
+				if shouldCallEvent then
+					local entities
+					if group then
+						entities = self.pool.groups[group].entities
+					else
+						entities = self.pool.entities
+					end
+					for _, entity in ipairs(entities) do
+						if type(entity[event]) == 'function' then
+							entity[event](entity, ...)
+						end
 					end
 				end
 			end
