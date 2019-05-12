@@ -53,13 +53,14 @@ local Pool = {}
 Pool.__index = Pool
 
 function Pool:_init(options, ...)
+	options = options or {}
 	self._queue = {}
 	self.entities = {}
 	self.hasEntity = {}
 	self.groups = {}
 	self._systems = {}
 	self._events = {}
-	options = options or {}
+	self.data = options.data or {}
 	local groups = options.groups or {}
 	local systems = options.systems or {nata.oop()}
 	for groupName, groupOptions in pairs(groups) do
