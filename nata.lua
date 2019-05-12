@@ -82,23 +82,16 @@ end
 
 function Pool:_addToGroup(groupName, entity)
 	local group = self.groups[groupName]
-	if not group.hasEntity[entity] then
-		table.insert(group.entities, entity)
-		group.hasEntity[entity] = true
-		self:emit('addToGroup', groupName, entity)
-	end
-	if group.sort then
-		table.sort(group.entities, group.sort)
-	end
+	table.insert(group.entities, entity)
+	group.hasEntity[entity] = true
+	self:emit('addToGroup', groupName, entity)
 end
 
 function Pool:_removeFromGroup(groupName, entity)
 	local group = self.groups[groupName]
-	if group.hasEntity[entity] then
-		removeByValue(group.entities, entity)
-		group.hasEntity[entity] = nil
-		self:emit('removeFromGroup', groupName, entity)
-	end
+	removeByValue(group.entities, entity)
+	group.hasEntity[entity] = nil
+	self:emit('removeFromGroup', groupName, entity)
 end
 
 function Pool:queue(entity)
@@ -113,8 +106,11 @@ function Pool:flush()
 		-- add it to/remove it from the group as needed
 		for groupName, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
-				self:_addToGroup(groupName, entity)
-			else
+				if not group.hasEntity[entity] then
+					self:_addToGroup(groupName, entity)
+				end
+				if group.sort then group._needsResort = true end
+			elseif group.hasEntity[entity] then
 				self:_removeFromGroup(groupName, entity)
 			end
 		end
@@ -125,6 +121,13 @@ function Pool:flush()
 			self:emit('add', entity)
 		end
 		self._queue[i] = nil
+	end
+	-- re-sort groups
+	for _, group in pairs(self.groups) do
+		if group._needsResort then
+			table.sort(group.entities, group.sort)
+			group._needsResort = nil
+		end
 	end
 end
 
@@ -200,6 +203,9 @@ function nata.oop(options)
 				if exclude and exclude[event] then shouldCallEvent = false end
 				if shouldCallEvent then
 					local entities
+					-- not using ternary here because if the group doesn't exist,
+					-- i'd rather it cause an error than just silently falling back
+					-- to the main entity pool
 					if group then
 						entities = self.pool.groups[group].entities
 					else
