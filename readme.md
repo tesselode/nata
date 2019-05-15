@@ -180,8 +180,8 @@ Creates a new entity pool.
   - `groups` (optional) - a table of groups the sort entities into. Defaults to `{all = {}}`. Each key is the name of the group, and the value is a table with the following contents:
     - `filter` (optional) - the requirement for entities to be added to this group. It can either be a list of required keys or a function that takes an entity as the first argument and returns if the entity should be added to the group. If no filter is specified, all entities will be added to the group.
     - `sort` (optional) - a function that defines how entities will be sorted. The function works the same way as the as the function argument for `table.sort`.
-    - `data` (optional) - a value to set `pool.data` to. Defaults to an empty table.
   - `systems` (optional) - a table of systems that should operate on the pool. Defaults to `nata.oop()`.
+  - `data` (optional) - a value to set `pool.data` to. Defaults to an empty table.
 - `...` - additional arguments that will be used when the `init` event is emitted.
 
 ```lua
