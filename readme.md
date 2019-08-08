@@ -1,4 +1,5 @@
-# Nata <!-- omit in toc -->
+Nata <!-- omit in toc -->
+----
 Nata is a Lua library for managing entities in games. It allows you to create **entity pools**, which are containers that hold all the objects in a game, like geometry, characters, and collectibles. At its simplest, pools hold entities and allow you to call functions on them, but they also provide a minimal structure for an Entity Component System organization.
 
 To see Nata in action, open the demo with LÖVE from the base directory:
@@ -6,6 +7,8 @@ To see Nata in action, open the demo with LÖVE from the base directory:
 love demo
 ```
 
+Table of contents <!-- omit in toc -->
+=================
 - [Installation](#installation)
 - [Usage](#usage)
   - [Adding entities to a pool](#adding-entities-to-a-pool)
@@ -221,6 +224,7 @@ Each pool has a `data` field, which by default is an empty table. You can set it
 ## API
 
 ### nata
+The main module. Creates pools and OOP systems.
 
 #### `nata.new(options, ...)`
 Creates a new entity pool.
@@ -250,6 +254,7 @@ Returns:
 - `oopSystem` ([`SystemDefinition`](#SystemDefinition)) - the newly created OOP system
 
 ### Pool
+A container for the entities and systems that make up a game world.
 
 #### Properties
 
@@ -323,6 +328,7 @@ Returns:
 - `systemInstance` ([`SystemInstance`](#SystemInstance)) - the instance of the system running in this pool
 
 ### SystemDefinition
+Defines a set of behaviors that can be added to a game world.
 
 #### Functions
 A system definition can have functions for the following special events, all of which are optional:
@@ -360,6 +366,7 @@ Parameters:
 - `entity` (`table`) - the entity that was removed
 
 ### SystemInstance
+An instance of a system that runs in a pool.
 
 #### Properties
 
