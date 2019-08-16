@@ -22,15 +22,16 @@ Table of contents <!-- omit in toc -->
   - [Pool data](#pool-data)
 - [API](#api)
   - [nata](#nata)
-    - [`nata.new(options, ...)`](#natanewoptions-)
-    - [`nata.oop(options)`](#nataoopoptions)
+    - [Functions](#functions)
+      - [`nata.new(options, ...)`](#natanewoptions-)
+      - [`nata.oop(options)`](#nataoopoptions)
   - [Pool](#pool)
     - [Properties](#properties)
       - [`entities` (`table`)](#entities-table)
       - [`hasEntity` (`table`)](#hasentity-table)
       - [`groups` (`table`)](#groups-table)
       - [`data` (`table`)](#data-table)
-    - [Functions](#functions)
+    - [Functions](#functions-1)
       - [`pool:queue(entity)`](#poolqueueentity)
       - [`pool:flush()`](#poolflush)
       - [`pool:remove(f)`](#poolremovef)
@@ -39,7 +40,7 @@ Table of contents <!-- omit in toc -->
       - [`pool:off(event, f)`](#pooloffevent-f)
       - [`pool:getSystem(systemDefinition)`](#poolgetsystemsystemdefinition)
   - [SystemDefinition](#systemdefinition)
-    - [Functions](#functions-1)
+    - [Functions](#functions-2)
       - [`SystemDefinition:init(...)`](#systemdefinitioninit)
       - [`SystemDefinition:add(entity)`](#systemdefinitionaddentity)
       - [`SystemDefinition:remove(entity)`](#systemdefinitionremoveentity)
@@ -226,7 +227,9 @@ Each pool has a `data` field, which by default is an empty table. You can set it
 ### nata
 The main module. Creates pools and OOP systems.
 
-#### `nata.new(options, ...)`
+#### Functions
+
+##### `nata.new(options, ...)`
 Creates a new entity pool.
 
 Parameters:
@@ -241,7 +244,7 @@ Parameters:
 Returns:
 - `pool` ([`Pool`](#Pool)) - the new pool
 
-#### `nata.oop(options)`
+##### `nata.oop(options)`
 Creates a system that receives events and calls the function of the same name on the entities themselves.
 
 Parameters:
