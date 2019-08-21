@@ -143,7 +143,7 @@ print(pool.groups.physical.hasEntity[entity])
 You can access entities by reading from the `entities` and `hasEntity` tables directly. You can also sort the `entities` tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
 ### Using systems
-In an Entity Component System architecture, a **system** affects entities with certain qualities. In Nata, a system is just an instance of a class that receives events from the pool and can call functions on the pool.
+In an Entity Component System architecture, a **system** affects entities with certain qualities. In Nata, a system is just an object that receives events from a pool.
 
 A system is defined like this:
 ```lua
@@ -233,28 +233,28 @@ The main module. Creates pools and OOP systems.
 Creates a new entity pool.
 
 Parameters:
-- `options` (`table`) (optional) - a table of options to set up the pool with. The table should have the following contents:
-  - `groups` (`table`) (optional) - a table of groups the sort entities into. Defaults to `{all = {}}`. Each key is the name of the group, and the value is a table with the following contents:
+- `options` (`table`) (optional) - the options for the pool. The table should have the following contents:
+  - `groups` (`table`) (optional, defaults to `{all = {}}`) - a table of groups to sort entities into. Each key is the name of the group, and the value is a table with the following contents:
     - `filter` (`table` or `function`) (optional) - the requirement for entities to be added to this group. It can either be a list of required keys or a function that takes an entity as the first argument and returns if the entity should be added to the group. If no filter is specified, all entities will be added to the group.
-    - `sort` (`function`) (optional) - a function that defines how entities will be sorted. The function works the same way as the as the function argument for `table.sort`.
-  - `systems` (`table`) (optional) - a table of systems that should operate on the pool. Defaults to `{nata.oop()}`.
-  - `data` (`table`) (optional) - a value to set `pool.data` to. Defaults to an empty table.
+    - `sort` (`function`) (optional) - a function that defines how entities will be sorted. The function works the same way as the as the second argument to `table.sort`.
+  - `systems` (`table`) (optional, defaults to `{nata.oop()}`) - the systems that should operate on the pool.
+  - `data` (`table`) (optional, defaults to `{}`) - the initial pool data table.
 - `...` - additional arguments that will be used when the `init` event is emitted.
 
 Returns:
-- `pool` ([`Pool`](#Pool)) - the new pool
+- `pool` ([`Pool`](#Pool)) - the new pool.
 
 ##### `nata.oop(options)`
-Creates a system that receives events and calls the function of the same name on the entities themselves.
+Creates a system that forwards events directly to entities.
 
 Parameters:
-- `options` (`table`) (optional) - options for customizing the behavior of the system. The table should have the following contents:
-  - `group` (`string`) (optional) - the name of the group of entities to call functions on
+- `options` (`table`) (optional) - options for the system. The table should have the following contents:
+  - `group` (`string`) (optional) - the name of the group of entities to forward events to.
   - `include` (`table`) (optional) - a list of events to forward to entities. If defined, only these events will be forwarded.
   - `exclude` (`table`) (optional) - a list of events not to forward to entities.
 
 Returns:
-- `oopSystem` ([`SystemDefinition`](#SystemDefinition)) - the newly created OOP system
+- `oopSystem` ([`SystemDefinition`](#SystemDefinition)) - the newly created OOP system.
 
 ### Pool
 A container for the entities and systems that make up a game world.
@@ -268,11 +268,11 @@ A list of all the entities in the pool.
 A set of all the entities in the pool. If the pool has an entity, `pool.hasEntity[entity]` will be true.
 
 ##### `groups` (`table`)
-A dictionary of all the groups in the pool. Each group has the following members:
+The groups in the pool. Each group has the following members:
   - `entities` (`table`) - a list of all the entities in the group
   - `hasEntity` (`table`) - a set of all the entities in the group.
-  - `filter` (`table` or `function` or `nil`) - the filter used to decide which entities belong in the grouop
-  - `sort` (`function` or `nil`) - the function used to decide how entities should be sorted within the group
+  - `filter` (`table` or `function` or `nil`) - the filter used to decide which entities belong in the group.
+  - `sort` (`function` or `nil`) - the function used to decide how entities should be sorted within the group.
 
 ##### `data` (`table`)
 A table you can use for whatever you like.
@@ -283,10 +283,10 @@ A table you can use for whatever you like.
 Queues an entity to be added to the pool. If the entity is already in the pool, the pool will re-check which groups the entity belongs in and add it to/remove it from groups as needed. Any group with a sort function that contains this entity will re-sort its entities list.
 
 Parameters:
-- `entity` - the entity to queue
+- `entity` (`table`) - the entity to queue.
 
 Returns:
-- `entity` (`table`) - the entity that was queued
+- `entity` (`table`) - the queued entity.
 
 ##### `pool:flush()`
 Adds/re-checks all of the queued entities (in the order they were queued).
@@ -298,37 +298,37 @@ Parameters:
 - `f` (`function`) - a function that takes an entity as an argument and returns `true` if the entity should be removed.
 
 ##### `pool:emit(event, ...)`
-Calls the function named `event` on each system that has it.
+Emits an event. This will call `system:event(...)` for any system that has a function named `event`.
 
 Parameters:
-- `event` (`string`) - the name of the function to call
-- `...` - additional arguments to pass to the system's functions
+- `event` (`string`) - the event to emit.
+- `...` - additional arguments to pass to the functions.
 
 ##### `pool:on(event, f)`
 Registers a function to be called when the specified event is emitted.
 
 Parameters:
-- `event` (`string`) - the event to listen for
-- `f` (`function`) - the function to call
+- `event` (`string`) - the event to listen for.
+- `f` (`function`) - the function to call.
 
 Returns:
-- `f` (`function`) - the registered function
+- `f` (`function`) - the registered function.
 
 ##### `pool:off(event, f)`
 Unregisters a function from an event.
 
 Parameters:
-- `event` (`string`) - the event to unregister from
-- `f` (`function`) - the function to unregister
+- `event` (`string`) - the event to unregister from.
+- `f` (`function`) - the function to unregister.
 
 ##### `pool:getSystem(systemDefinition)`
 Gets the pool's instance of a certain system.
 
 Parameters:
-- `systemDefinition` ([`SystemDefinition`](#SystemDefinition)) - the table that was used to add the system to the pool
+- `systemDefinition` ([`SystemDefinition`](#SystemDefinition)) - the table that was used to define the system.
 
 Returns:
-- `systemInstance` ([`SystemInstance`](#SystemInstance)) - the instance of the system running in this pool
+- `systemInstance` ([`SystemInstance`](#SystemInstance)) - the instance of the system running in this pool.
 
 ### SystemDefinition
 Defines a set of behaviors that can be added to a game world.
@@ -337,36 +337,36 @@ Defines a set of behaviors that can be added to a game world.
 A system definition can have functions for the following special events, all of which are optional:
 
 ##### `SystemDefinition:init(...)`
-Called when the pool is first creaed.
+Called when the pool is first created.
 
 Parameters:
-- `...` - additional arguments passed to `nata.new`
+- `...` - additional arguments passed to `nata.new`.
 
 ##### `SystemDefinition:add(entity)`
 Called when an entity is added to the pool.
 
 Parameters:
-- `entity` (`table`) - the entity that was added
+- `entity` (`table`) - the entity that was added.
 
 ##### `SystemDefinition:remove(entity)`
 Called when an entity is removed from the pool.
 
 Parameters:
-- `entity` (`table`) - the entity that was removed
+- `entity` (`table`) - the entity that was removed.
 
 ##### `SystemDefinition:addToGroup(groupName, entity)`
 Called when an entity is added to a group.
 
 Parameters:
-- `groupName` (`string`) - the name of the group the entity was added to
-- `entity` (`table`) - the entity that was added
+- `groupName` (`string`) - the name of the group the entity was added to.
+- `entity` (`table`) - the entity that was added.
 
 ##### `SystemDefinition:removeFromGroup(groupName, entity)`
 Called when an entity is removed from a group.
 
 Parameters:
-- `groupName` (`string`) - the name of the group the entity was removed from
-- `entity` (`table`) - the entity that was removed
+- `groupName` (`string`) - the name of the group the entity was removed from.
+- `entity` (`table`) - the entity that was removed.
 
 ### SystemInstance
 An instance of a system that runs in a pool.
@@ -377,4 +377,4 @@ An instance of a system that runs in a pool.
 The pool that this system is currently running on.
 
 ## Contributing
-Nata is still rapidly changing, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
+Nata is a young library, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
