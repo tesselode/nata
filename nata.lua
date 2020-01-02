@@ -27,6 +27,78 @@ local nata = {
 	]]
 }
 
+-- gets the error level needed to make an error appear
+-- in the user's code, not the library code
+local function getUserErrorLevel()
+	local source = debug.getinfo(1).source
+	local level = 1
+	while debug.getinfo(level).source == source do
+		level = level + 1
+	end
+	--[[
+		we return level - 1 here and not just level
+		because the level was calculated one function
+		deeper than the function that will actually
+		use this value. if we produced an error *inside*
+		this function, level would be correct, but
+		for the function calling this function, level - 1
+		is correct.
+	]]
+	return level - 1
+end
+
+-- gets the name of the function that the user called
+-- that eventually caused an error
+local function getUserCalledFunctionName()
+	return debug.getinfo(getUserErrorLevel() - 1).name
+end
+
+local function checkCondition(condition, message)
+	if condition then return end
+	error(message, getUserErrorLevel())
+end
+
+-- changes a list of types into a human-readable phrase
+-- i.e. string, table, number -> "string, table, or number"
+local function getAllowedTypesText(...)
+	local numberOfArguments = select('#', ...)
+	if numberOfArguments >= 3 then
+		local text = ''
+		for i = 1, numberOfArguments - 1 do
+			text = text .. string.format('%s, ', select(i, ...))
+		end
+		text = text .. string.format('or %s', select(numberOfArguments, ...))
+		return text
+	elseif numberOfArguments == 2 then
+		return string.format('%s or %s', select(1, ...), select(2, ...))
+	end
+	return select(1, ...)
+end
+
+-- checks if an argument is of the correct type, and if not,
+-- throws a "bad argument" error consistent with the ones
+-- lua and love produce
+local function checkArgument(argumentIndex, argument, ...)
+	for i = 1, select('#', ...) do
+		if type(argument) == select(i, ...) then return end
+	end
+	error(
+		string.format(
+			"bad argument #%i to '%s' (expected %s, got %s)",
+			argumentIndex,
+			getUserCalledFunctionName(),
+			getAllowedTypesText(...),
+			type(argument)
+		),
+		getUserErrorLevel()
+	)
+end
+
+local function checkOptionalArgument(argumentIndex, argument, ...)
+	if argument == nil then return end
+	checkArgument(argumentIndex, argument, ...)
+end
+
 local function removeByValue(t, v)
 	for i = #t, 1, -1 do
 		if t[i] == v then table.remove(t, i) end
@@ -52,7 +124,36 @@ end
 local Pool = {}
 Pool.__index = Pool
 
+function Pool:_validateOptions(options)
+	checkOptionalArgument(1, options, 'table')
+	if not options then return end
+	if options.groups then
+		checkCondition(type(options.groups) == 'table', "groups must be a table")
+		for groupName, groupOptions in pairs(options.groups) do
+			checkCondition(type(groupOptions) == 'table',
+				string.format("options for group '$s' must be a table", groupName))
+			local filter = groupOptions.filter
+			if filter ~= nil then
+				checkCondition(type(filter) == 'table' or type(filter) == 'function',
+					string.format("filter for group '%s' must be a table or function", groupName))
+			end
+			local sort = groupOptions.sort
+			if sort ~= nil then
+				checkCondition(type(sort) == 'function',
+					string.format("sort for group '%s' must be a function", groupName))
+			end
+		end
+	end
+	if options.systems then
+		checkCondition(type(options.systems) == 'table', "systems must be a table")
+		for _, system in ipairs(options.systems) do
+			checkCondition(type(system) == 'table', "all systems must be tables")
+		end
+	end
+end
+
 function Pool:_init(options, ...)
+	self:_validateOptions(options)
 	options = options or {}
 	self._queue = {}
 	self.entities = {}
@@ -122,6 +223,7 @@ function Pool:flush()
 end
 
 function Pool:remove(f)
+	checkArgument(1, f, 'function')
 	for groupName, group in pairs(self.groups) do
 		for i = #group.entities, 1, -1 do
 			local entity = group.entities[i]
@@ -143,18 +245,23 @@ function Pool:remove(f)
 end
 
 function Pool:on(event, f)
+	checkCondition(event ~= nil, "event cannot be nil")
+	checkArgument(2, f, 'function')
 	self._events[event] = self._events[event] or {}
 	table.insert(self._events[event], f)
 	return f
 end
 
 function Pool:off(event, f)
+	checkCondition(event ~= nil, "event cannot be nil")
+	checkArgument(2, f, 'function')
 	if self._events[event] then
 		removeByValue(self._events[event], f)
 	end
 end
 
 function Pool:emit(event, ...)
+	checkCondition(event ~= nil, "event cannot be nil")
 	for _, system in ipairs(self._systems) do
 		if type(system[event]) == 'function' then
 			system[event](system, ...)
@@ -168,6 +275,7 @@ function Pool:emit(event, ...)
 end
 
 function Pool:getSystem(systemDefinition)
+	checkArgument(1, systemDefinition, 'table')
 	for _, system in ipairs(self._systems) do
 		if getmetatable(system).__index == systemDefinition then
 			return system
@@ -175,7 +283,19 @@ function Pool:getSystem(systemDefinition)
 	end
 end
 
+local function validateOopOptions(options)
+	checkOptionalArgument(1, options, 'table')
+	if not options then return end
+	if options.include then
+		checkCondition(type(options.include) == 'table', "include must be a table")
+	end
+	if options.exclude then
+		checkCondition(type(options.exclude) == 'table', "exclude must be a table")
+	end
+end
+
 function nata.oop(options)
+	validateOopOptions(options)
 	local group = options and options.group
 	local include, exclude
 	if options and options.include then
