@@ -4,9 +4,8 @@ local Player = require 'entity.player'
 -- set up the entity pool
 local pool = nata.new {
 	--[[
-		define groups. the "all" group contains every entity,
-		and the others include entities that have all the
-		specified fields.
+		define groups. each group contains the entities
+		that have the specified components.
 	]]
 	groups = {
 		physical = {filter = {'x', 'y', 'r'}},
