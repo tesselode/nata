@@ -68,14 +68,30 @@ describe('a pool', function()
 		}
 	}
 
-	it('adds queued entities in order', function()
+	-- adding entities
+	it('queues entities to be added', function()
 		pool:queue(entity1)
 		pool:queue(entity2)
 		pool:queue(entity3)
+		assert.are.same(pool.entities, {})
+	end)
+
+	it('adds queued entities in order', function()
 		pool:flush()
 		assert.are.same(pool.entities, {entity1, entity2, entity3})
 	end)
 
+	it('removes entities from the queue after adding them', function()
+		assert.are.same(pool._queue, {})
+	end)
+
+	it('keeps a set of entities', function()
+		assert.is_true(pool.hasEntity[entity1])
+		assert.is_true(pool.hasEntity[entity2])
+		assert.is_true(pool.hasEntity[entity3])
+	end)
+
+	-- groups
 	it('allows adding groups without filters', function()
 		assert.are.same(pool.groups.all.entities, pool.entities)
 	end)
@@ -92,6 +108,7 @@ describe('a pool', function()
 		assert.are.same(pool.groups.sorted.entities, {entity2, entity3, entity1})
 	end)
 
+	-- systems
 	it('calls the init event on systems', function()
 		assert.spy(systemInitSpy).was_called()
 	end)
@@ -109,10 +126,19 @@ describe('a pool', function()
 		assert.spy(systemAddToGroupSpy).was_not_called_with('position', entity2)
 	end)
 
+	-- removing entities
 	it('removes entities according to a user-specified condition', function()
 		entity2.dead = true
 		pool:remove(function(e) return e.dead end)
 		assert.are.same(pool.entities, {entity1, entity3})
+	end)
+
+	it('removes entities from the set', function()
+		assert.is_nil(pool.hasEntity[entity2])
+	end)
+
+	it('removes entities from groups as well as the main pool', function()
+		assert.are.same(pool.groups.cool.entities, {entity3})
 	end)
 
 	it('calls remove events on systems', function()
@@ -125,12 +151,17 @@ describe('a pool', function()
 		assert.spy(systemRemoveFromGroupSpy).was_not_called_with('cool', entity3)
 	end)
 
-	it('keeps a set of entities', function()
-		assert.is_true(pool.hasEntity[entity1])
-		assert.is_true(pool.hasEntity[entity3])
-		assert.is_nil(pool.hasEntity[entity2])
+	-- updating entities
+	it('allows re-queueing entities to check for changes', function()
+		entity1.coolness = 1000
+		pool:queue(entity1)
+		pool:flush()
+		assert.are.same(pool.entities, {entity1, entity3})
+		assert.are.same(pool.groups.cool.entities, {entity3, entity1})
+		assert.spy(systemAddToGroupSpy).was_called_with('cool', entity1)
 	end)
 
+	-- event listeners
 	local s = spy.new(function() end)
 	local f = pool:on('test', function(...) s(...) end)
 
