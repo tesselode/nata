@@ -1,3 +1,6 @@
+--- Entity management for Lua.
+-- @module nata
+
 local nata = {
 	_VERSION = 'Nata',
 	_DESCRIPTION = 'Entity management for Lua.',
@@ -121,8 +124,87 @@ local function filterEntity(entity, filter)
 	return true
 end
 
+--- Defines the behaviors of a system.
+--
+-- There's no constructor for SystemDefinitions. Rather, you simply
+-- define a table with functions that correspond to events. These
+-- events can be named anything you like. Below are the built-in events
+-- that the pool will automatically call.
+-- @type SystemDefinition
+
+--- Called when the pool is first created.
+-- @function SystemDefinition:init
+-- @param ... additional arguments that were passed to `nata.new`.
+
+--- Called when an entity is added to the pool.
+-- @function SystemDefinition:add
+-- @tparam table e the entity that was added
+
+--- Called when an entity is removed from the pool.
+-- @function SystemDefinition:remove
+-- @tparam table e the entity that was removed
+
+--- Called when an entity is added to a group.
+-- @function SystemDefinition:addToGroup
+-- @string groupName the name of the group that the entity was added to
+-- @tparam table e the entity that was added
+
+--- Called when an entity is removed from a group.
+-- @function SystemDefinition:removeFromGroup
+-- @string groupName the name of the group that the entity was removed from
+-- @tparam table e the entity that was removed
+
+--- Responds to events in a pool.
+--
+-- Systems are not created directly. They're created by the @{Pool}
+-- according to the @{SystemDefinition}s passed to `nata.new`.
+-- Each system instance inherits all of the functions of its
+-- @{SystemDefinition}.
+-- @type System
+
+--- The @{Pool} that this system is running on.
+-- @tfield Pool pool
+
+--- Manages a subset of entities.
+-- @type Group
+
+--- The filter that defines which entities are added to this group.
+-- Can be either:
+--
+-- - A list of required keys
+-- - A function that takes the entity as the first argument
+-- and returns true if the entity should be added to the group
+-- @tfield[opt] table|function filter
+
+--- A function that specifies how the entities in this group should be sorted.
+-- Has the same requirements as the function argument to Lua's built-in `table.sort`.
+-- @tfield[opt] function sort
+
+--- A list of all the entities in the group.
+-- @tfield table entities
+
+--- A set of all the entities in the group.
+-- @tfield table hasEntity
+-- @usage
+-- print(pool.groups.physical.hasEntity[e]) -- prints "true" if the entity is in the "physical" group, or "nil" if not
+
+--- Manages entities in a game world.
+-- @type Pool
 local Pool = {}
 Pool.__index = Pool
+
+--- A list of all the entities in the pool.
+-- @tfield table entities
+
+--- A set of all the entities in the pool.
+-- @tfield table hasEntity
+-- @usage
+-- print(pool.hasEntity[e]) -- prints "true" if the entity is in the pool, or "nil" if not
+
+--- A dictionary of the @{Group}s in the pool.
+-- @tfield table groups
+
+---
 
 function Pool:_validateOptions(options)
 	checkOptionalArgument(1, options, 'table')
@@ -181,11 +263,16 @@ function Pool:_init(options, ...)
 	self:emit('init', ...)
 end
 
+--- Queues an entity to be added to the pool.
+-- @tparam table entity the entity to add
+-- @treturn table the queued entity
 function Pool:queue(entity)
 	table.insert(self._queue, entity)
 	return entity
 end
 
+--- Adds the queued entities to the pool. Entities are added
+-- in the order they were queued.
 function Pool:flush()
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
@@ -222,6 +309,10 @@ function Pool:flush()
 	end
 end
 
+--- Removes entities from the pool.
+-- @tparam function f the condition upon which an entity should be
+-- removed. The function should take an entity as the first argument
+-- and return `true` if the entity should be removed.
 function Pool:remove(f)
 	checkArgument(1, f, 'function')
 	for groupName, group in pairs(self.groups) do
@@ -244,6 +335,10 @@ function Pool:remove(f)
 	end
 end
 
+--- Registers a function to be called when an event is emitted.
+-- @string event the event to listen for
+-- @tparam function f the function to call
+-- @treturn function the function that was registered
 function Pool:on(event, f)
 	checkCondition(event ~= nil, "event cannot be nil")
 	checkArgument(2, f, 'function')
@@ -252,6 +347,9 @@ function Pool:on(event, f)
 	return f
 end
 
+--- Unregisters a function from an event.
+-- @string event the event to unregister the function from
+-- @tparam function f the function to unregister
 function Pool:off(event, f)
 	checkCondition(event ~= nil, "event cannot be nil")
 	checkArgument(2, f, 'function')
@@ -260,6 +358,11 @@ function Pool:off(event, f)
 	end
 end
 
+--- Emits an event. The `system[event]` function will be called
+-- for each system that has it, and functions registered
+-- to the event will be called as well.
+-- @string event the event to emit
+-- @param ... additional arguments to pass to the functions that are called
 function Pool:emit(event, ...)
 	checkCondition(event ~= nil, "event cannot be nil")
 	for _, system in ipairs(self._systems) do
@@ -274,6 +377,9 @@ function Pool:emit(event, ...)
 	end
 end
 
+--- Gets this pool's instance of a system.
+-- @tparam SystemDefinition systemDefinition the system class to get the instance of
+-- @treturn System the instance of the system running in this pool
 function Pool:getSystem(systemDefinition)
 	checkArgument(1, systemDefinition, 'table')
 	for _, system in ipairs(self._systems) do
@@ -282,6 +388,9 @@ function Pool:getSystem(systemDefinition)
 		end
 	end
 end
+
+---
+-- @section end
 
 local function validateOopOptions(options)
 	checkOptionalArgument(1, options, 'table')
@@ -338,6 +447,9 @@ function nata.oop(options)
 	})
 end
 
+--- Creates a new @{Pool}.
+-- @param ... additional arguments to pass to the pool's init event
+-- @treturn Pool the new pool
 function nata.new(...)
 	local pool = setmetatable({}, Pool)
 	pool:_init(...)

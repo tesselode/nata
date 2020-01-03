@@ -1,0 +1,5 @@
+project = 'Nata'
+title = 'Nata Manual'
+file = 'nata.lua'
+dir = 'html'
+format = 'markdown'
