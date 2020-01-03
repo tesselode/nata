@@ -132,15 +132,20 @@ function Pool:flush()
 end
 
 function Pool:remove(f)
+	for groupName, group in pairs(self.groups) do
+		for i = #group.entities, 1, -1 do
+			local entity = group.entities[i]
+			if f(entity) then
+				self:emit('removeFromGroup', groupName, entity)
+				table.remove(group.entities, i)
+				group.hasEntity[entity] = nil
+			end
+		end
+	end
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
 			self:emit('remove', entity)
-			for groupName, group in pairs(self.groups) do
-				if group.hasEntity[entity] then
-					self:_removeFromGroup(groupName, entity)
-				end
-			end
 			table.remove(self.entities, i)
 			self.hasEntity[entity] = nil
 		end
