@@ -19,33 +19,129 @@ describe('nata.new', function()
 	end)
 end)
 
-describe('The Pool class', function()
-	local entity1 = {}
-	local entity2 = {}
-	local entity3 = {}
+describe('pools', function()
+	local systemInitSpy = spy.new(function() end)
+	local systemAddSpy = spy.new(function() end)
+	local systemRemoveSpy = spy.new(function() end)
+	local systemAddToGroupSpy = spy.new(function() end)
+	local systemRemoveFromGroupSpy = spy.new(function() end)
 
-	local pool = nata.new()
+	local testSystem = {}
 
-	it('adds queued entities in order', function()
+	function testSystem:init()
+		systemInitSpy()
+	end
+
+	function testSystem:add(...)
+		systemAddSpy(...)
+	end
+
+	function testSystem:remove(...)
+		systemRemoveSpy(...)
+	end
+
+	function testSystem:addToGroup(...)
+		systemAddToGroupSpy(...)
+	end
+
+	function testSystem:removeFromGroup(...)
+		systemRemoveFromGroupSpy(...)
+	end
+
+	local entity1 = {coolness = 0, x = 50, y = 100, z = 10}
+	local entity2 = {coolness = 100, z = -10}
+	local entity3 = {coolness = 10, z = 0}
+
+	local pool = nata.new {
+		groups = {
+			all = {},
+			sorted = {
+				sort = function(a, b) return a.z < b.z end
+			},
+			cool = {
+				filter = function(e) return e.coolness >= 10 end
+			},
+			position = {filter = {'x', 'y'}},
+		},
+		systems = {
+			testSystem,
+		}
+	}
+
+	it('add queued entities in order', function()
 		pool:queue(entity1)
 		pool:queue(entity2)
 		pool:queue(entity3)
 		pool:flush()
-		assert.are.equals(pool.entities[1], entity1)
-		assert.are.equals(pool.entities[2], entity2)
-		assert.are.equals(pool.entities[3], entity3)
+		assert.are.same(pool.entities, {entity1, entity2, entity3})
 	end)
 
-	it('removes entities according to a user-specified condition', function()
+	it('allow adding groups without filters', function()
+		assert.are.same(pool.groups.all.entities, pool.entities)
+	end)
+
+	it('allow adding groups with required keys', function()
+		assert.are.same(pool.groups.position.entities, {entity1})
+	end)
+
+	it('allow adding groups with filter functions', function()
+		assert.are.same(pool.groups.cool.entities, {entity2, entity3})
+	end)
+
+	it('allow sorting groups', function()
+		assert.are.same(pool.groups.sorted.entities, {entity2, entity3, entity1})
+	end)
+
+	it('calls the init event on systems', function()
+		assert.spy(systemInitSpy).was_called()
+	end)
+
+	it('call add events on systems', function()
+		assert.spy(systemAddSpy).was_called_with(entity1)
+		assert.spy(systemAddSpy).was_called_with(entity2)
+		assert.spy(systemAddSpy).was_called_with(entity3)
+	end)
+
+	it('call addToGroup events on systems', function()
+		assert.spy(systemAddToGroupSpy).was_called_with('cool', entity2)
+		assert.spy(systemAddToGroupSpy).was_called_with('cool', entity3)
+		assert.spy(systemAddToGroupSpy).was_not_called_with('cool', entity1)
+		assert.spy(systemAddToGroupSpy).was_not_called_with('position', entity2)
+	end)
+
+	it('remove entities according to a user-specified condition', function()
 		entity2.dead = true
 		pool:remove(function(e) return e.dead end)
-		assert.are.equals(pool.entities[1], entity1)
-		assert.are.equals(pool.entities[2], entity3)
+		assert.are.same(pool.entities, {entity1, entity3})
 	end)
 
-	it('keeps a set of entities', function()
+	it('call remove events on systems', function()
+		assert.spy(systemRemoveSpy).was_not_called_with(entity1)
+		assert.spy(systemRemoveSpy).was_called_with(entity2)
+	end)
+
+	it('call removeFromGroup events on systems', function()
+		assert.spy(systemRemoveFromGroupSpy).was_called_with('cool', entity2)
+		assert.spy(systemRemoveFromGroupSpy).was_not_called_with('cool', entity3)
+	end)
+
+	it('keep a set of entities', function()
 		assert.is_true(pool.hasEntity[entity1])
 		assert.is_true(pool.hasEntity[entity3])
 		assert.is_nil(pool.hasEntity[entity2])
+	end)
+
+	local s = spy.new(function() end)
+	local f = pool:on('test', function(...) s(...) end)
+
+	it('allow registering functions to events', function()
+		pool:emit('test', 'hi!', 1, 2, 3)
+		assert.spy(s).was_called_with('hi!', 1, 2, 3)
+	end)
+
+	it('allow unregistering functions from events', function()
+		pool:off('test', f)
+		pool:emit 'test'
+		assert.spy(s).was_called(1)
 	end)
 end)
