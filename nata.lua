@@ -80,20 +80,6 @@ function Pool:_init(options, ...)
 	self:emit('init', ...)
 end
 
-function Pool:_addToGroup(groupName, entity)
-	local group = self.groups[groupName]
-	table.insert(group.entities, entity)
-	group.hasEntity[entity] = true
-	self:emit('addToGroup', groupName, entity)
-end
-
-function Pool:_removeFromGroup(groupName, entity)
-	local group = self.groups[groupName]
-	removeByValue(group.entities, entity)
-	group.hasEntity[entity] = nil
-	self:emit('removeFromGroup', groupName, entity)
-end
-
 function Pool:queue(entity)
 	table.insert(self._queue, entity)
 	return entity
@@ -107,11 +93,15 @@ function Pool:flush()
 		for groupName, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
 				if not group.hasEntity[entity] then
-					self:_addToGroup(groupName, entity)
+					table.insert(group.entities, entity)
+					group.hasEntity[entity] = true
+					self:emit('addToGroup', groupName, entity)
 				end
 				if group.sort then group._needsResort = true end
 			elseif group.hasEntity[entity] then
-				self:_removeFromGroup(groupName, entity)
+				removeByValue(group.entities, entity)
+				group.hasEntity[entity] = nil
+				self:emit('removeFromGroup', groupName, entity)
 			end
 		end
 		-- add the entity to the pool if it hasn't been added already
