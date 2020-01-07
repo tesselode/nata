@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Nata Manual</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Nata</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Installation">Installation </a></li>
+<li><a href="#Adding_entities_to_a_pool">Adding entities to a pool </a></li>
+<li><a href="#Emitting_events">Emitting events </a></li>
+<li><a href="#Removing_entities">Removing entities </a></li>
+<li><a href="#Organizing_entities_into_groups">Organizing entities into groups </a></li>
+<li><a href="#Accessing_entities">Accessing entities </a></li>
+<li><a href="#Using_systems">Using systems </a></li>
+<li><a href="#Updating_and_re_sorting_groups">Updating and re-sorting groups </a></li>
+<li><a href="#Listening_for_events_from_outside_the_pool">Listening for events from outside the pool </a></li>
+<li><a href="#Pool_data">Pool data </a></li>
+</ul>
+
+
+<h2>Topics</h2>
+<ul class="">
+  <li><strong>Tutorial
+</strong></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../index.html">nata</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h1>Tutorial</h1>
+
+<p><a name="Installation"></a></p>
+<h2>Installation</h2>
+<p>To use Nata, place <code>nata.lua</code> in your project, and then add this code to the files where you use Nata:</p>
+
+<pre>
+<span class="keyword">local</span> nata = <span class="global">require</span> <span class="string">'nata'</span> <span class="comment">-- if your nata.lua is in the root directory
+</span><span class="keyword">local</span> nata = <span class="global">require</span> <span class="string">'path.to.nata'</span> <span class="comment">-- if it's in subfolders</span>
+</pre>
+
+
+<p><a name="Adding_entities_to_a_pool"></a></p>
+<h2>Adding entities to a pool</h2>
+<p>A pool is a container for the entities in our game world. To create a pool, use <a href="../index.html#new">nata.new</a>:</p>
+
+<pre>
+<span class="keyword">local</span> pool = nata.new()
+</pre>
+
+<p>Nata assumes that each entity is represented by a table. The table might look something like this:</p>
+
+<pre>
+<span class="keyword">local</span> enemy = {
+  x = <span class="number">50</span>,
+  y = <span class="number">50</span>,
+  w = <span class="number">25</span>,
+  h = <span class="number">25</span>,
+  vx = <span class="number">100</span>,
+  vy = <span class="number">200</span>,
+  health = <span class="number">2</span>,
+}
+</pre>
+
+<p>To add it to the pool, we can use <a href="../index.html#Pool:queue">Pool:queue</a>:</p>
+
+<pre>
+pool:queue(entity)
+</pre>
+
+<p>This won't immediately add it to the pool, it'll just queue it to be added later. To actually add the entities, we need to add <a href="../index.html#Pool:flush">Pool:flush</a> somewhere in our game loop, like <code>love.update</code>:</p>
+
+<pre>
+<span class="keyword">function</span> love.update(dt)
+  pool:flush()
+<span class="keyword">end</span>
+</pre>
+
+
+<p><a name="Emitting_events"></a></p>
+<h2>Emitting events</h2>
+<p>It's common for each entity to have callback functions like <code>update</code> and <code>draw</code>. To call these, we can use <a href="../index.html#Pool:emit">Pool:emit</a>:</p>
+
+<pre>
+<span class="keyword">function</span> love.update(dt)
+  pool:flush()
+  pool:emit(<span class="string">'update'</span>, dt)
+<span class="keyword">end</span>
+</pre>
+
+<p>This code will call <code>entity:update(dt)</code> on each entity (if it has a function called <code>update</code>).</p>
+
+<p><a name="Removing_entities"></a></p>
+<h2>Removing entities</h2>
+<p>We can remove entities from the pool using <a href="../index.html#Pool:remove">Pool:remove</a>:</p>
+
+<pre>
+pool:remove(<span class="keyword">function</span>(entity) <span class="keyword">return</span> entity.dead <span class="keyword">end</span>)
+</pre>
+
+<p>Rather than removing individual entities, we provide a function that decides which entities should be removed. The function takes an entity as the first argument, and it returns true if the entity should be removed. In this example, any entity for which <code>entity.dead</code> is true will be removed.</p>
+
+<p><a name="Organizing_entities_into_groups"></a></p>
+<h2>Organizing entities into groups</h2>
+<p>By default, pools store every entity in a single collection, but you can also set up additional groups to organize entities into. Each group can have its own <strong>filter</strong>, which determines which entities will be added to that group. Groups can also have a <a href="../index.html#Group.sort">sort</a> function, which is used to sort the entities in the group whenever a new one is added.</p>
+
+<p>You can define groups by passing an options table into <a href="../index.html#new">nata.new</a>:</p>
+
+<pre>
+<span class="keyword">local</span> pool = nata.new {
+  groups = {
+    physical = {filter = {<span class="string">'x'</span>, <span class="string">'y'</span>, <span class="string">'w'</span>, <span class="string">'h'</span>}},
+    large = {
+      filter = <span class="keyword">function</span>(entity)
+        <span class="keyword">return</span> entity.w &gt; <span class="number">100</span> <span class="keyword">or</span> entity.h &gt; <span class="number">100</span>
+      <span class="keyword">end</span>,
+      sort = <span class="keyword">function</span>(a, b)
+        <span class="keyword">return</span> a.w + a.h &lt; b.w + b.h
+      <span class="keyword">end</span>,
+    },
+  }
+}
+</pre>
+
+<p>Filters can be either a table of required keys or a function. You can also leave out the filter, which allows all entities to be added to that group. The sort function works the same way as the second argument to <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.sort">table.sort</a>.</p>
+
+<p><a name="Accessing_entities"></a></p>
+<h2>Accessing entities</h2>
+
+<pre>
+<span class="comment">-- iterate through all entities
+</span><span class="keyword">for</span> _, entity <span class="keyword">in</span> <span class="global">ipairs</span>(pool.entities) <span class="keyword">do</span> <span class="keyword">end</span>
+
+<span class="comment">-- iterate through the physical group
+</span><span class="keyword">for</span> _, entity <span class="keyword">in</span> <span class="global">ipairs</span>(pool.groups.physical.entities) <span class="keyword">do</span> <span class="keyword">end</span>
+
+<span class="comment">-- check if the pool has an entity
+</span><span class="global">print</span>(pool.hasEntity[entity])
+
+<span class="comment">-- check if a specific group has an entity
+</span><span class="global">print</span>(pool.groups.physical.hasEntity[entity])
+</pre>
+
+<p>You can access entities by reading from the <a href="../index.html#Pool.entities">entities</a> and <a href="../index.html#Group.hasEntity">hasEntity</a> tables directly. You can also sort the <a href="../index.html#Pool.entities">entities</a> tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use <a href="../index.html#Pool:queue">queue</a>/<a href="../index.html#Pool:flush">flush</a>/<a href="../index.html#Pool:remove">remove</a> for that.</p>
+
+<p><a name="Using_systems"></a></p>
+<h2>Using systems</h2>
+<p>In an Entity Component System architecture, a <strong>system</strong> affects entities with certain qualities. In Nata, a system is just an object that receives events from a pool.</p>
+
+<p>A system is defined like this:</p>
+
+<pre>
+<span class="keyword">local</span> GravitySystem = {}
+
+<span class="keyword">function</span> GravitySystem:init()
+  self.baseGravity = <span class="number">100</span>
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> GravitySystem:update(dt)
+  <span class="keyword">for</span> _, e <span class="keyword">in</span> <span class="global">ipairs</span>(self.pool.groups.gravity.entities) <span class="keyword">do</span>
+    e.vy = e.vy + self.baseGravity * e.gravity * dt
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p>You can add systems to a pool by including a <a href="../index.html#PoolOptions.systems">systems</a> table in the options table passed to <a href="../index.html#new">nata.new</a>:</p>
+
+<pre>
+<span class="keyword">local</span> pool = nata.new {
+  groups = {
+    gravity = {filter = {<span class="string">'gravity'</span>}},
+  },
+  systems = {
+    GravitySystem,
+  },
+}
+</pre>
+
+<p>Now, when <code>pool:emit(&apos;update&apos;, dt)</code> is called, <code>GravitySystem:update(dt)</code> will be called as well.</p>
+
+<p><a href="../index.html#SystemDefinition:init">init</a> is a special function that's called when the pool is first created. There's other special functions, too - see the API for the full list.</p>
+
+<p>Also note that the system functions are all self functions - each pool creates "instances" of each system "class", so systems can hold their own internal state. Each system also has <code>self.pool</code>, which allows access to all pool functions and properties.</p>
+
+<p>Note that when the <a href="../index.html#PoolOptions.systems">systems</a> table is not defined, the pool defaults to having one system: the <a href="../index.html#oop">nata.oop</a> system. This system is responsible for calling functions on entities when an event is emitted. If you're defining a list of systems and you want to retain this behavior, you should add <code>nata.oop()</code> to your systems list.</p>
+
+<pre>
+<span class="keyword">local</span> pool = nata.new {
+  groups = {
+    gravity = {filter = {<span class="string">'gravity'</span>}},
+  },
+  systems = {
+    nata.oop(),
+    GravitySystem,
+  },
+}
+</pre>
+
+<p>When called without any arguments, <a href="../index.html#oop">nata.oop</a> will create a system that operates on every entity in the pool. If you want it to only operate on a specific group, you can pass an options table to <a href="../index.html#oop">nata.oop</a> with a <a href="../index.html#OopOptions.group">group</a> field. You can also whitelist or blacklist events for the system to forward to entities using <a href="../index.html#OopOptions.include">include</a> and <a href="../index.html#OopOptions.exclude">exclude</a>. In this example, the <a href="../index.html#oop">nata.oop</a> system will only operate on entities in the gravity group, and it won't call the draw event on those entities.</p>
+
+<pre>
+  <span class="keyword">local</span> pool = nata.new {
+  groups = {
+    gravity = {filter = {<span class="string">'gravity'</span>}},
+  },
+  systems = {
+    nata.oop {
+      group = <span class="string">'gravity'</span>,
+      exclude = {<span class="string">'draw'</span>},
+    },
+    GravitySystem,
+  },
+}
+</pre>
+
+
+<p><a name="Updating_and_re_sorting_groups"></a></p>
+<h2>Updating and re-sorting groups</h2>
+<p>Sometimes, you may want to add or remove a component on an entity after it's been added to the pool, and you may want those changes to be reflected in the groups so that systems can iterate over the right entities. Pools don't know when an entity changes, but if you queue the entity again, then when the entity is flushed, the pool will re-check which groups the entity belongs to. Groups containing the queued entity will also re-sort their entities even if the queued entity was already in the group, so you can use this to sort groups at any time.</p>
+
+<p><a name="Listening_for_events_from_outside_the_pool"></a></p>
+<h2>Listening for events from outside the pool</h2>
+<p>Any system in a pool will automatically receive events that the pool emits. However, it can be useful to listen for events in a piece of code that isn't one the pool's systems. You can trigger any function when a certain event occurs using <a href="../index.html#Pool:on">Pool:on</a>:</p>
+
+<pre>
+<span class="keyword">local</span> listener = pool:on(<span class="string">'quitGame'</span>, <span class="keyword">function</span>()
+  love.event.quit()
+<span class="keyword">end</span>)
+</pre>
+
+<p>In this example, when the pool emits the <code>quitGame</code> event, the game will be closed. If you want to undo this later, you can use <a href="../index.html#Pool:off">Pool:off</a>:</p>
+
+<pre>
+pool:off(<span class="string">'quitGame'</span>, listener)
+</pre>
+
+
+<p><a name="Pool_data"></a></p>
+<h2>Pool data</h2>
+<p>Each pool has a <a href="../index.html#PoolOptions.data">data</a> field, which by default is an empty table. You can set it to anything you want by defining a <a href="../index.html#PoolOptions.data">data</a> field in the options table passed to <a href="../index.html#new">nata.new</a>. This happens before the "init" event is called, so systems can use the data in the <a href="../index.html#SystemDefinition:init">init</a> function. Besides this, Nata doesn't use the data field in any way, so feel free to use it for whatever you want.</p>
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-01-07 00:23:57 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,1055 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Nata Manual</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Nata</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#SystemDefinition">SystemDefinition </a></li>
+<li><a href="#System">System </a></li>
+<li><a href="#Group">Group </a></li>
+<li><a href="#Pool">Pool </a></li>
+<li><a href="#OopOptions">OopOptions </a></li>
+<li><a href="#GroupOptions">GroupOptions </a></li>
+<li><a href="#PoolOptions">PoolOptions </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>nata</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="topics/tutorial.md.html">Tutorial
+</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>nata</code></h1>
+<p>Entity management for Lua.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#oop">oop ([options])</a></td>
+	<td class="summary">Creates a new OOP system definition.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#new">new ([options[, ...]])</a></td>
+	<td class="summary">Creates a new <a href="index.html#Pool">Pool</a>.</td>
+	</tr>
+</table>
+<h2><a href="#SystemDefinition">SystemDefinition </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition:init">SystemDefinition:init (...)</a></td>
+	<td class="summary">Called when the pool is first created.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition:add">SystemDefinition:add (e)</a></td>
+	<td class="summary">Called when an entity is added to the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition:remove">SystemDefinition:remove (e)</a></td>
+	<td class="summary">Called when an entity is removed from the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition:addToGroup">SystemDefinition:addToGroup (groupName, e)</a></td>
+	<td class="summary">Called when an entity is added to a group.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition:removeFromGroup">SystemDefinition:removeFromGroup (groupName, e)</a></td>
+	<td class="summary">Called when an entity is removed from a group.</td>
+	</tr>
+</table>
+<h2><a href="#System">System </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#System.pool">System.pool</a></td>
+	<td class="summary">The <a href="index.html#Pool">Pool</a> that this system is running on.</td>
+	</tr>
+</table>
+<h2><a href="#Group">Group </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Group.filter">Group.filter</a></td>
+	<td class="summary">The filter that defines which entities are added to this group.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Group.sort">Group.sort</a></td>
+	<td class="summary">A function that specifies how the entities in this group should be sorted.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Group.entities">Group.entities</a></td>
+	<td class="summary">A list of all the entities in the group.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Group.hasEntity">Group.hasEntity</a></td>
+	<td class="summary">A set of all the entities in the group.</td>
+	</tr>
+</table>
+<h2><a href="#Pool">Pool </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Pool.entities">Pool.entities</a></td>
+	<td class="summary">A list of all the entities in the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool.hasEntity">Pool.hasEntity</a></td>
+	<td class="summary">A set of all the entities in the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool.groups">Pool.groups</a></td>
+	<td class="summary">A dictionary of the <a href="index.html#Group">Group</a>s in the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool.data">Pool.data</a></td>
+	<td class="summary">A field containing any data you want.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:queue">Pool:queue (entity)</a></td>
+	<td class="summary">Queues an entity to be added to the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:flush">Pool:flush ()</a></td>
+	<td class="summary">Adds the queued entities to the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:remove">Pool:remove (f)</a></td>
+	<td class="summary">Removes entities from the pool.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:on">Pool:on (event, f)</a></td>
+	<td class="summary">Registers a function to be called when an event is emitted.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:off">Pool:off (event, f)</a></td>
+	<td class="summary">Unregisters a function from an event.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:emit">Pool:emit (event, ...)</a></td>
+	<td class="summary">Emits an event.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pool:getSystem">Pool:getSystem (systemDefinition)</a></td>
+	<td class="summary">Gets this pool's instance of a system.</td>
+	</tr>
+</table>
+<h2><a href="#OopOptions">OopOptions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#OopOptions.include">OopOptions.include</a></td>
+	<td class="summary">A list of events to forward to entities.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#OopOptions.exclude">OopOptions.exclude</a></td>
+	<td class="summary">A list of events <em>not</em> to forward to entities.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#OopOptions.group">OopOptions.group</a></td>
+	<td class="summary">The name of the group of entities to forward events to.</td>
+	</tr>
+</table>
+<h2><a href="#GroupOptions">GroupOptions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#GroupOptions.filter">GroupOptions.filter</a></td>
+	<td class="summary">The filter that defines which entities are added to this group.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#GroupOptions.sort">GroupOptions.sort</a></td>
+	<td class="summary">A function that specifies how the entities in this group should be sorted.</td>
+	</tr>
+</table>
+<h2><a href="#PoolOptions">PoolOptions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#PoolOptions.groups">PoolOptions.groups</a></td>
+	<td class="summary">A dictionary of groups for the pool to have.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PoolOptions.systems">PoolOptions.systems</a></td>
+	<td class="summary">A list of <a href="index.html#SystemDefinition">SystemDefinition</a>s for the pool to use.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PoolOptions.data">PoolOptions.data</a></td>
+	<td class="summary">An initial value to set <a href="index.html#Pool.data">Pool.data</a> to.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "oop"></a>
+    <strong>oop ([options])</strong>
+    </dt>
+    <dd>
+    Creates a new OOP system definition.
+ An OOP system, upon receiving an event, will call
+ the function of the same name on each entity it monitors
+ (if it exists). This facilitates a more traditional, OOP-style
+ entity management, where you loop over a table of entities and
+ call update and draw functions on them.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="index.html#OopOptions">OopOptions</a></span>
+         how to set up the OOP system
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#SystemDefinition">SystemDefinition</a></span>
+        the new OOP system definition
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "new"></a>
+    <strong>new ([options[, ...]])</strong>
+    </dt>
+    <dd>
+    Creates a new <a href="index.html#Pool">Pool</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="index.html#PoolOptions">PoolOptions</a></span>
+         how to set up the pool
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">...</span>
+         additional arguments to pass to the pool's init event
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Pool">Pool</a></span>
+        the new pool
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="SystemDefinition"></a>SystemDefinition </h2>
+
+          <div class="section-description">
+          Defines the behaviors of a system. </p>
+
+<p> There's no constructor for SystemDefinitions. Rather, you simply
+ define a table with functions that correspond to events. These
+ events can be named anything you like. Below are the built-in events
+ that the pool will automatically call.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "SystemDefinition:init"></a>
+    <strong>SystemDefinition:init (...)</strong>
+    </dt>
+    <dd>
+    Called when the pool is first created.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         additional arguments that were passed to <a href="index.html#new">nata.new</a>.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SystemDefinition:add"></a>
+    <strong>SystemDefinition:add (e)</strong>
+    </dt>
+    <dd>
+    Called when an entity is added to the pool.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">e</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the entity that was added
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SystemDefinition:remove"></a>
+    <strong>SystemDefinition:remove (e)</strong>
+    </dt>
+    <dd>
+    Called when an entity is removed from the pool.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">e</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the entity that was removed
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SystemDefinition:addToGroup"></a>
+    <strong>SystemDefinition:addToGroup (groupName, e)</strong>
+    </dt>
+    <dd>
+    Called when an entity is added to a group.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">groupName</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the name of the group that the entity was added to
+        </li>
+        <li><span class="parameter">e</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the entity that was added
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SystemDefinition:removeFromGroup"></a>
+    <strong>SystemDefinition:removeFromGroup (groupName, e)</strong>
+    </dt>
+    <dd>
+    Called when an entity is removed from a group.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">groupName</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the name of the group that the entity was removed from
+        </li>
+        <li><span class="parameter">e</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the entity that was removed
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="System"></a>System </h2>
+
+          <div class="section-description">
+          Responds to events in a pool. </p>
+
+<p> Systems are not created directly. They're created by the <a href="index.html#Pool">Pool</a>
+ according to the <a href="index.html#SystemDefinition">SystemDefinition</a>s passed to <a href="index.html#new">nata.new</a>.
+ Each system instance inherits all of the functions of its
+ <a href="index.html#SystemDefinition">SystemDefinition</a>.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "System.pool"></a>
+    <strong>System.pool</strong>
+    </dt>
+    <dd>
+    The <a href="index.html#Pool">Pool</a> that this system is running on.
+
+
+    <ul>
+        <li><span class="parameter">pool</span>
+            <span class="types"><a class="type" href="index.html#Pool">Pool</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Group"></a>Group </h2>
+
+          <div class="section-description">
+          Manages a subset of entities.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Group.filter"></a>
+    <strong>Group.filter</strong>
+    </dt>
+    <dd>
+
+<p>The filter that defines which entities are added to this group.
+ Can be either:</p>
+
+<ul>
+    <li>A list of required keys</li>
+    <li>A function that takes the entity as the first argument
+    and returns true if the entity should be added to the group</li>
+</ul>
+
+
+
+
+    <ul>
+        <li><span class="parameter">filter</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> or <span class="type">function</span></span>
+
+
+
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Group.sort"></a>
+    <strong>Group.sort</strong>
+    </dt>
+    <dd>
+    A function that specifies how the entities in this group should be sorted.
+ Has the same requirements as the function argument to Lua's built-in <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.sort">table.sort</a>.
+
+
+    <ul>
+        <li><span class="parameter">sort</span>
+            <span class="types"><span class="type">function</span></span>
+
+
+
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Group.entities"></a>
+    <strong>Group.entities</strong>
+    </dt>
+    <dd>
+    A list of all the entities in the group.
+
+
+    <ul>
+        <li><span class="parameter">entities</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Group.hasEntity"></a>
+    <strong>Group.hasEntity</strong>
+    </dt>
+    <dd>
+    A set of all the entities in the group.
+
+
+    <ul>
+        <li><span class="parameter">hasEntity</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="global">print</span>(pool.groups.physical.hasEntity[e]) <span class="comment">-- prints "true" if the entity is in the "physical" group, or "nil" if not</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Pool"></a>Pool </h2>
+
+          <div class="section-description">
+          Manages entities in a game world.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Pool.entities"></a>
+    <strong>Pool.entities</strong>
+    </dt>
+    <dd>
+    A list of all the entities in the pool.
+
+
+    <ul>
+        <li><span class="parameter">entities</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool.hasEntity"></a>
+    <strong>Pool.hasEntity</strong>
+    </dt>
+    <dd>
+    A set of all the entities in the pool.
+
+
+    <ul>
+        <li><span class="parameter">hasEntity</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="global">print</span>(pool.hasEntity[e]) <span class="comment">-- prints "true" if the entity is in the pool, or "nil" if not</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Pool.groups"></a>
+    <strong>Pool.groups</strong>
+    </dt>
+    <dd>
+    A dictionary of the <a href="index.html#Group">Group</a>s in the pool.
+
+
+    <ul>
+        <li><span class="parameter">groups</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool.data"></a>
+    <strong>Pool.data</strong>
+    </dt>
+    <dd>
+    A field containing any data you want.
+
+
+    <ul>
+        <li><span class="parameter">data</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:queue"></a>
+    <strong>Pool:queue (entity)</strong>
+    </dt>
+    <dd>
+    Queues an entity to be added to the pool.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">entity</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the entity to add
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+        the queued entity
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:flush"></a>
+    <strong>Pool:flush ()</strong>
+    </dt>
+    <dd>
+    Adds the queued entities to the pool.  Entities are added
+ in the order they were queued.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:remove"></a>
+    <strong>Pool:remove (f)</strong>
+    </dt>
+    <dd>
+    Removes entities from the pool.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         the condition upon which an entity should be
+ removed. The function should take an entity as the first argument
+ and return <code>true</code> if the entity should be removed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:on"></a>
+    <strong>Pool:on (event, f)</strong>
+    </dt>
+    <dd>
+    Registers a function to be called when an event is emitted.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">event</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the event to listen for
+        </li>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         the function to call
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        the function that was registered
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:off"></a>
+    <strong>Pool:off (event, f)</strong>
+    </dt>
+    <dd>
+    Unregisters a function from an event.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">event</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the event to unregister the function from
+        </li>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         the function to unregister
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:emit"></a>
+    <strong>Pool:emit (event, ...)</strong>
+    </dt>
+    <dd>
+    Emits an event.  The <code>system[event]</code> function will be called
+ for each system that has it, and functions registered
+ to the event will be called as well.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">event</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the event to emit
+        </li>
+        <li><span class="parameter">...</span>
+         additional arguments to pass to the functions that are called
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pool:getSystem"></a>
+    <strong>Pool:getSystem (systemDefinition)</strong>
+    </dt>
+    <dd>
+    Gets this pool's instance of a system.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">systemDefinition</span>
+            <span class="types"><a class="type" href="index.html#SystemDefinition">SystemDefinition</a></span>
+         the system class to get the instance of
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#System">System</a></span>
+        the instance of the system running in this pool
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="OopOptions"></a>OopOptions </h2>
+
+          <div class="section-description">
+          Defines the behavior of an OOP system.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "OopOptions.include"></a>
+    <strong>OopOptions.include</strong>
+    </dt>
+    <dd>
+    A list of events to forward to entities.  If not defined,
+ the system will forward all events to entities (except
+ for the ones in the exclude list).
+
+
+    <ul>
+        <li><span class="parameter">include</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "OopOptions.exclude"></a>
+    <strong>OopOptions.exclude</strong>
+    </dt>
+    <dd>
+    A list of events <em>not</em> to forward to entities.
+
+
+    <ul>
+        <li><span class="parameter">exclude</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "OopOptions.group"></a>
+    <strong>OopOptions.group</strong>
+    </dt>
+    <dd>
+    The name of the group of entities to forward events to.
+ If not defined, the system will forward events to all entities.
+
+
+    <ul>
+        <li><span class="parameter">group</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="GroupOptions"></a>GroupOptions </h2>
+
+          <div class="section-description">
+          Defines the filter and sort function for a <a href="index.html#Group">Group</a>.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "GroupOptions.filter"></a>
+    <strong>GroupOptions.filter</strong>
+    </dt>
+    <dd>
+
+<p>The filter that defines which entities are added to this group.
+ Can be either:</p>
+
+<ul>
+    <li>A list of required keys</li>
+    <li>A function that takes the entity as the first argument
+    and returns true if the entity should be added to the group</li>
+</ul>
+
+
+
+
+    <ul>
+        <li><span class="parameter">filter</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> or <span class="type">function</span></span>
+
+
+
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "GroupOptions.sort"></a>
+    <strong>GroupOptions.sort</strong>
+    </dt>
+    <dd>
+    A function that specifies how the entities in this group should be sorted.
+ Has the same requirements as the function argument to Lua's built-in <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.sort">table.sort</a>.
+
+
+    <ul>
+        <li><span class="parameter">sort</span>
+            <span class="types"><span class="type">function</span></span>
+
+
+
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="PoolOptions"></a>PoolOptions </h2>
+
+          <div class="section-description">
+          Defines the groups and systems for a <a href="index.html#Pool">Pool</a>.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "PoolOptions.groups"></a>
+    <strong>PoolOptions.groups</strong>
+    </dt>
+    <dd>
+    A dictionary of groups for the pool to have.
+ Each key is the name of the group, and each value
+ should be a <a href="index.html#GroupOptions">GroupOptions</a> table.
+
+
+    <ul>
+        <li><span class="parameter">groups</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PoolOptions.systems"></a>
+    <strong>PoolOptions.systems</strong>
+    </dt>
+    <dd>
+    A list of <a href="index.html#SystemDefinition">SystemDefinition</a>s for the pool to use.
+
+
+    <ul>
+        <li><span class="parameter">systems</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+
+
+
+         (<em>default</em> {nata.oop()})
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PoolOptions.data"></a>
+    <strong>PoolOptions.data</strong>
+    </dt>
+    <dd>
+    An initial value to set <a href="index.html#Pool.data">Pool.data</a> to.
+
+
+    <ul>
+        <li><span class="parameter">data</span>
+
+
+
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-01-07 00:23:57 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
