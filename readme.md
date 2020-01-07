@@ -14,5 +14,8 @@ local nata = require 'nata' -- if your nata.lua is in the root directory
 local nata = require 'path.to.nata' -- if it's in subfolders
 ```
 
+## Documentation
+### [Tutorial](https://tesselode.github.io/nata/topics/tutorial.md.html) | [API reference](https://tesselode.github.io/nata/)
+
 ## Contributing
 Nata is a young library, so feel free to make suggestions about the design! Issues and pull requests are always welcome.
