@@ -204,6 +204,9 @@ Pool.__index = Pool
 --- A dictionary of the @{Group}s in the pool.
 -- @tfield table groups
 
+--- A field containing any data you want.
+-- @field data
+
 ---
 
 function Pool:_validateOptions(options)
@@ -403,6 +406,33 @@ local function validateOopOptions(options)
 	end
 end
 
+--- Defines the behavior of an OOP system.
+-- @type OopOptions
+-- @see nata.oop
+
+--- A list of events to forward to entities. If not defined,
+-- the system will forward all events to entities (except
+-- for the ones in the exclude list).
+-- @tfield table include
+
+--- A list of events *not* to forward to entities.
+-- @tfield table exclude
+
+--- The name of the group of entities to forward events to.
+-- If not defined, the system will forward events to all entities.
+-- @tfield string group
+
+---
+-- @section end
+
+--- Creates a new OOP system definition.
+-- An OOP system, upon receiving an event, will call
+-- the function of the same name on each entity it monitors
+-- (if it exists). This facilitates a more traditional, OOP-style
+-- entity management, where you loop over a table of entities and
+-- call update and draw functions on them.
+-- @tparam[opt] OopOptions options how to set up the OOP system
+-- @treturn SystemDefinition the new OOP system definition
 function nata.oop(options)
 	validateOopOptions(options)
 	local group = options and options.group
@@ -447,12 +477,45 @@ function nata.oop(options)
 	})
 end
 
+--- Defines the filter and sort function for a @{Group}.
+-- @type GroupOptions
+
+--- The filter that defines which entities are added to this group.
+-- Can be either:
+--
+-- - A list of required keys
+-- - A function that takes the entity as the first argument
+-- and returns true if the entity should be added to the group
+-- @tfield[opt] table|function filter
+
+--- A function that specifies how the entities in this group should be sorted.
+-- Has the same requirements as the function argument to Lua's built-in `table.sort`.
+-- @tfield[opt] function sort
+
+--- Defines the groups and systems for a @{Pool}.
+-- @type PoolOptions
+
+--- A dictionary of groups for the pool to have.
+-- Each key is the name of the group, and each value
+-- should be a @{GroupOptions} table.
+-- @tfield[opt={}] table groups
+
+--- A list of @{SystemDefinition}s for the pool to use.
+-- @tfield[opt={nata.oop()}] table systems
+
+--- An initial value to set @{Pool.data} to.
+-- @field[opt={}] data
+
+---
+-- @section end
+
 --- Creates a new @{Pool}.
--- @param ... additional arguments to pass to the pool's init event
+-- @tparam[opt] PoolOptions options how to set up the pool
+-- @param[opt] ... additional arguments to pass to the pool's init event
 -- @treturn Pool the new pool
-function nata.new(...)
+function nata.new(options, ...)
 	local pool = setmetatable({}, Pool)
-	pool:_init(...)
+	pool:_init(options, ...)
 	return pool
 end
 
