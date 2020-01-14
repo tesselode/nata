@@ -124,6 +124,38 @@ local function filterEntity(entity, filter)
 	return true
 end
 
+local Entity = {}
+
+function Entity:__index(key)
+	if Entity[key] then return Entity[key] end
+	return self._components[key]
+end
+
+function Entity:add(component, ...)
+	checkArgument(1, component, 'function')
+	self._components[component] = component(...)
+	if not self._pool._pending[self] then
+		self._pool:queue(self)
+	end
+	return self
+end
+
+function Entity:remove(component)
+	checkArgument(1, component, 'function')
+	self._components[component] = nil
+	if not self._pool._pending[self] then
+		self._pool:queue(self)
+	end
+	return self
+end
+
+local function newEntity(pool)
+	return setmetatable({
+		_pool = pool,
+		_components = {},
+	}, Entity)
+end
+
 --- Defines the behaviors of a system.
 --
 -- There's no constructor for SystemDefinitions. Rather, you simply
@@ -241,6 +273,7 @@ function Pool:_init(options, ...)
 	self:_validateOptions(options)
 	options = options or {}
 	self._queue = {}
+	self._pending = {}
 	self.entities = {}
 	self.hasEntity = {}
 	self.groups = {}
@@ -270,6 +303,8 @@ end
 -- @tparam table entity the entity to add
 -- @treturn table the queued entity
 function Pool:queue(entity)
+	entity = entity or newEntity(self)
+	self._pending[entity] = true
 	table.insert(self._queue, entity)
 	return entity
 end
@@ -302,6 +337,7 @@ function Pool:flush()
 			self:emit('add', entity)
 		end
 		self._queue[i] = nil
+		self._pending[entity] = nil
 	end
 	-- re-sort groups
 	for _, group in pairs(self.groups) do
