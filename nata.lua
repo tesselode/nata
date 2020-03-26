@@ -2,7 +2,7 @@
 -- @module nata
 
 local nata = {
-	_VERSION = 'Nata',
+	_VERSION = 'Nata v0.3.2',
 	_DESCRIPTION = 'Entity management for Lua.',
 	_URL = 'https://github.com/tesselode/nata',
 	_LICENSE = [[
