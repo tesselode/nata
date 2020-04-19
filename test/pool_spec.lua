@@ -144,7 +144,7 @@ describe('a pool', function()
 
 	-- event listeners
 	local s = spy.new(function() end)
-	local f = pool:on('test', function(...) s(...) end)
+	local f = pool:on('test', s)
 
 	it('allows registering functions to events', function()
 		pool:emit('test', 'hi!', 1, 2, 3)

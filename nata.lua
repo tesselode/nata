@@ -83,6 +83,12 @@ end
 -- lua and love produce
 local function checkArgument(argumentIndex, argument, ...)
 	for i = 1, select('#', ...) do
+		-- allow tables with the __call metamethod to be treated like functions
+		if select(i, ...) == 'function' then
+			if type(argument) == 'table' and getmetatable(argument).__call then
+				return
+			end
+		end
 		if type(argument) == select(i, ...) then return end
 	end
 	error(
