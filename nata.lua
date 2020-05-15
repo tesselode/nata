@@ -114,6 +114,31 @@ local function removeByValue(t, v)
 	end
 end
 
+--[[
+	removes an item from a table by replacing it with the
+	last item in the table (and removing the last item from
+	the end of the table). this is faster than using table.remove
+	because you only have to move one element. the downside is
+	that removing items changes their order, but this is OK
+	for most entity groups
+]]
+local function fastRemove(t, i)
+	-- if there's only one item in the table, then there's nothing
+	-- to replace it with, so just nil it out
+	if #t == 1 then
+		t[i] = nil
+		return
+	end
+	t[i] = t[#t]
+	t[#t] = nil
+end
+
+local function fastRemoveByValue(t, v)
+	for i = #t, 1, -1 do
+		if t[i] == v then fastRemove(t, i) end
+	end
+end
+
 local function entityHasKeys(entity, keys)
 	for _, key in ipairs(keys) do
 		if not entity[key] then return false end
@@ -182,9 +207,18 @@ end
 -- and returns true if the entity should be added to the group
 -- @tfield[opt] table|function filter
 
---- A function that specifies how the entities in this group should be sorted.
--- Has the same requirements as the function argument to Lua's built-in `table.sort`.
--- @tfield[opt] function sort
+--- Specifies how entities in this group will be sorted.
+-- Can be:
+--
+-- - `nil` - entities will not be sorted, and they will not necessarily
+-- retain their order when entities are removed. This allows for faster
+-- entity removal, so it's recommended for groups whose entity order
+-- doesn't matter.
+-- - `true` - entities will remain in the order they were added in
+-- - a function - entities will be sorted according to the specified function.
+-- This function has the same requirements as the function argument to
+-- Lua's built-in `table.sort`.
+-- @tfield[opt] true|function sort
 
 --- A list of all the entities in the group.
 -- @tfield table entities
@@ -230,8 +264,8 @@ function Pool:_validateOptions(options)
 			end
 			local sort = groupOptions.sort
 			if sort ~= nil then
-				checkCondition(type(sort) == 'function',
-					string.format("sort for group '%s' must be a function", groupName))
+				checkCondition(sort == true or type(sort) == 'function',
+					string.format("sort for group '%s' must be a function or true", groupName))
 			end
 		end
 	end
@@ -312,9 +346,23 @@ function Pool:flush()
 					group.hasEntity[entity] = true
 					self:emit('addToGroup', groupName, entity)
 				end
-				if group.sort then group._needsResort = true end
+				-- if the group has a sort function, then we need to
+				-- sort the entities later
+				if type(group.sort) == 'function' then
+					group._needsResort = true
+				end
 			elseif group.hasEntity[entity] then
-				removeByValue(group.entities, entity)
+				--[[
+					if the group has a sort function, or it's in
+					"preserve order" mode, then we should use the slower
+					remove function that preserves the order of entities.
+					otherwise, we can go fast
+				]]
+				if group.sort then
+					removeByValue(group.entities, entity)
+				else
+					fastRemoveByValue(group.entities, entity)
+				end
 				group.hasEntity[entity] = nil
 				self:emit('removeFromGroup', groupName, entity)
 			end
@@ -342,21 +390,33 @@ end
 -- and return `true` if the entity should be removed.
 function Pool:remove(f)
 	checkArgument(1, f, 'function')
+	-- remove entities from groups
 	for groupName, group in pairs(self.groups) do
 		for i = #group.entities, 1, -1 do
 			local entity = group.entities[i]
 			if f(entity) then
 				self:emit('removeFromGroup', groupName, entity)
-				table.remove(group.entities, i)
+				--[[
+					if the group has a sort function, or it's in
+					"preserve order" mode, then we should use the slower
+					remove function that preserves the order of entities.
+					otherwise, we can go fast
+				]]
+				if group.sort then
+					table.remove(group.entities, i)
+				else
+					fastRemove(group.entities, i)
+				end
 				group.hasEntity[entity] = nil
 			end
 		end
 	end
+	-- remove entities from the main pool
 	for i = #self.entities, 1, -1 do
 		local entity = self.entities[i]
 		if f(entity) then
 			self:emit('remove', entity)
-			table.remove(self.entities, i)
+			fastRemove(self.entities, i)
 			self.hasEntity[entity] = nil
 		end
 	end
@@ -512,9 +572,18 @@ end
 -- and returns true if the entity should be added to the group
 -- @tfield[opt] table|function filter
 
---- A function that specifies how the entities in this group should be sorted.
--- Has the same requirements as the function argument to Lua's built-in `table.sort`.
--- @tfield[opt] function sort
+--- Specifies how entities in this group will be sorted.
+-- Can be:
+--
+-- - `nil` - entities will not be sorted, and they will not necessarily
+-- retain their order when entities are removed. This allows for faster
+-- entity removal, so it's recommended for groups whose entity order
+-- doesn't matter.
+-- - `true` - entities will remain in the order they were added in
+-- - a function - entities will be sorted according to the specified function.
+-- This function has the same requirements as the function argument to
+-- Lua's built-in `table.sort`.
+-- @tfield[opt] true|function sort
 
 --- Defines the groups and systems for a @{Pool}.
 -- @type PoolOptions
