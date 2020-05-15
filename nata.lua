@@ -167,21 +167,13 @@ end
 -- @function SystemDefinition:init
 -- @param ... additional arguments that were passed to `nata.new`.
 
---- Called when an entity is added to the pool.
--- @function SystemDefinition:add
--- @tparam table e the entity that was added
-
---- Called when an entity is removed from the pool.
--- @function SystemDefinition:remove
--- @tparam table e the entity that was removed
-
 --- Called when an entity is added to a group.
--- @function SystemDefinition:addToGroup
+-- @function SystemDefinition:add
 -- @string groupName the name of the group that the entity was added to
 -- @tparam table e the entity that was added
 
 --- Called when an entity is removed from a group.
--- @function SystemDefinition:removeFromGroup
+-- @function SystemDefinition:remove
 -- @string groupName the name of the group that the entity was removed from
 -- @tparam table e the entity that was removed
 
@@ -233,14 +225,6 @@ end
 local Pool = {}
 Pool.__index = Pool
 
---- A list of all the entities in the pool.
--- @tfield table entities
-
---- A set of all the entities in the pool.
--- @tfield table hasEntity
--- @usage
--- print(pool.hasEntity[e]) -- prints "true" if the entity is in the pool, or "nil" if not
-
 --- A dictionary of the @{Group}s in the pool.
 -- @tfield table groups
 
@@ -285,14 +269,12 @@ function Pool:_init(options, ...)
 	-- a temporary table for entities that will be added to the pool
 	-- on the current flush (see Pool.flush for more details)
 	self._entitiesToFlush = {}
-	self.entities = {}
-	self.hasEntity = {}
 	self.groups = {}
 	self._systems = {}
 	self._events = {}
 	self.data = options.data or {}
-	local groups = options.groups or {}
-	local systems = options.systems or {nata.oop()}
+	local groups = options.groups or {all = {}}
+	local systems = options.systems or {nata.oop 'all'}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
 			filter = groupOptions.filter,
@@ -323,12 +305,12 @@ end
 function Pool:flush()
 	--[[
 		Move the currently queued entities to a temporary
-		table. This way, if an add/addToGroup/removeToGroup
-		event emission leads to another entity being queued,
-		it will be saved for the next flush, rather than
-		adding entities to the table we're in the middle
-		of iterating over, which would lead to an array with
-		holes and screw everything up.
+		table. This way, if an add/remove event emission
+		leads to another entity being queued, it will be
+		saved for the next flush, rather than adding entities
+		to the table we're in the middle of iterating over,
+		which would lead to an array with holes and screw
+		everything up.
 	]]
 	for i = 1, #self._queue do
 		local entity = self._queue[i]
@@ -344,7 +326,7 @@ function Pool:flush()
 				if not group.hasEntity[entity] then
 					table.insert(group.entities, entity)
 					group.hasEntity[entity] = true
-					self:emit('addToGroup', groupName, entity)
+					self:emit('add', groupName, entity)
 				end
 				-- if the group has a sort function, then we need to
 				-- sort the entities later
@@ -364,14 +346,8 @@ function Pool:flush()
 					fastRemoveByValue(group.entities, entity)
 				end
 				group.hasEntity[entity] = nil
-				self:emit('removeFromGroup', groupName, entity)
+				self:emit('remove', groupName, entity)
 			end
-		end
-		-- add the entity to the pool if it hasn't been added already
-		if not self.hasEntity[entity] then
-			table.insert(self.entities, entity)
-			self.hasEntity[entity] = true
-			self:emit('add', entity)
 		end
 		self._entitiesToFlush[i] = nil
 	end
@@ -395,7 +371,7 @@ function Pool:remove(f)
 		for i = #group.entities, 1, -1 do
 			local entity = group.entities[i]
 			if f(entity) then
-				self:emit('removeFromGroup', groupName, entity)
+				self:emit('remove', groupName, entity)
 				--[[
 					if the group has a sort function, or it's in
 					"preserve order" mode, then we should use the slower
@@ -409,15 +385,6 @@ function Pool:remove(f)
 				end
 				group.hasEntity[entity] = nil
 			end
-		end
-	end
-	-- remove entities from the main pool
-	for i = #self.entities, 1, -1 do
-		local entity = self.entities[i]
-		if f(entity) then
-			self:emit('remove', entity)
-			fastRemove(self.entities, i)
-			self.hasEntity[entity] = nil
 		end
 	end
 end
@@ -497,10 +464,10 @@ end
 --- A list of events to forward to entities. If not defined,
 -- the system will forward all events to entities (except
 -- for the ones in the exclude list).
--- @tfield table include
+-- @tfield[opt] table include
 
 --- A list of events *not* to forward to entities.
--- @tfield table exclude
+-- @tfield[opt] table exclude
 
 --- The name of the group of entities to forward events to.
 -- If not defined, the system will forward events to all entities.
@@ -515,11 +482,13 @@ end
 -- (if it exists). This facilitates a more traditional, OOP-style
 -- entity management, where you loop over a table of entities and
 -- call update and draw functions on them.
+-- @tparam string group the name of the group of entities to forward
+-- events to
 -- @tparam[opt] OopOptions options how to set up the OOP system
 -- @treturn SystemDefinition the new OOP system definition
-function nata.oop(options)
+function nata.oop(group, options)
+	checkArgument(1, group, 'string')
 	validateOopOptions(options)
-	local group = options and options.group
 	local include, exclude
 	if options and options.include then
 		include = {}
@@ -540,15 +509,7 @@ function nata.oop(options)
 				if include and not include[event] then shouldCallEvent = false end
 				if exclude and exclude[event] then shouldCallEvent = false end
 				if shouldCallEvent then
-					local entities
-					-- not using ternary here because if the group doesn't exist,
-					-- i'd rather it cause an error than just silently falling back
-					-- to the main entity pool
-					if group then
-						entities = self.pool.groups[group].entities
-					else
-						entities = self.pool.entities
-					end
+					local entities = self.pool.groups[group].entities
 					for _, entity in ipairs(entities) do
 						if type(entity[event]) == 'function' then
 							entity[event](entity, ...)

@@ -8,6 +8,7 @@ local pool = nata.new {
 		that have the specified components.
 	]]
 	groups = {
+		all = {},
 		physical = {filter = {'x', 'y', 'r'}},
 		shoot = {filter = {'x', 'y', 'shoot'}},
 		health = {filter = {'x', 'y', 'r', 'health', 'damage'}},
@@ -18,7 +19,7 @@ local pool = nata.new {
 		events in the order they're listed.
 	]]
 	systems = {
-		nata.oop(),
+		nata.oop 'all',
 		require 'system.spawn',
 		require 'system.physical',
 		require 'system.shoot',
@@ -27,12 +28,12 @@ local pool = nata.new {
 	},
 }
 
-pool:on('addToGroup', function(group, entity)
+pool:on('add', function(group, entity)
 	if entity.isPlayer then
 		print('add', group, entity)
 	end
 end)
-pool:on('removeFromGroup', function(group, entity)
+pool:on('remove', function(group, entity)
 	if entity.isPlayer then
 		print('remove', group, entity)
 	end
@@ -72,5 +73,5 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print('FPS: ' .. love.timer.getFPS(), 0, 0)
 	love.graphics.print('Memory: ' .. math.floor(collectgarbage 'count') .. ' kb', 0, 16)
-	love.graphics.print('Entities: ' .. #pool.entities, 0, 32)
+	love.graphics.print('Entities: ' .. #pool.groups.all.entities, 0, 32)
 end

@@ -5,7 +5,7 @@
 
 local shoot = {}
 
-function shoot:add(e)
+function shoot:add(groupName, e)
 	-- initialize entities that can shoot with a reload timer
 	if not self.pool.groups.shoot.hasEntity[e] then return false end
 	e.shoot.reloadTimer = 0
