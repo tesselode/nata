@@ -123,12 +123,6 @@ end
 	for most entity groups
 ]]
 local function fastRemove(t, i)
-	-- if there's only one item in the table, then there's nothing
-	-- to replace it with, so just nil it out
-	if #t == 1 then
-		t[i] = nil
-		return
-	end
 	t[i] = t[#t]
 	t[#t] = nil
 end
