@@ -312,11 +312,7 @@ function Pool:flush()
 		which would lead to an array with holes and screw
 		everything up.
 	]]
-	for i = 1, #self._queue do
-		local entity = self._queue[i]
-		self._entitiesToFlush[i] = entity
-		self._queue[i] = nil
-	end
+	self._queue, self._entitiesToFlush = self._entitiesToFlush, self._queue
 	for i = 1, #self._entitiesToFlush do
 		local entity = self._entitiesToFlush[i]
 		-- check if the entity belongs in each group and
