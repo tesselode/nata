@@ -197,27 +197,6 @@ local groupHasMetatable = {
 --- Manages a subset of entities.
 -- @type Group
 
---- The filter that defines which entities are added to this group.
--- Can be either:
---
--- - A list of required keys
--- - A function that takes the entity as the first argument
--- and returns true if the entity should be added to the group
--- @tfield[opt] table|function filter
-
---- Specifies how entities in this group will be sorted.
--- Can be:
---
--- - `nil` - entities will not be sorted, and they will not necessarily
--- retain their order when entities are removed. This allows for faster
--- entity removal, so it's recommended for groups whose entity order
--- doesn't matter.
--- - `true` - entities will remain in the order they were added in
--- - a function - entities will be sorted according to the specified function.
--- This function has the same requirements as the function argument to
--- Lua's built-in `table.sort`.
--- @tfield[opt] true|function sort
-
 --- A list of all the entities in the group.
 -- @tfield table entities
 
@@ -289,8 +268,8 @@ function Pool:_init(options, ...)
 	local systems = options.systems or {nata.oop 'all'}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
-			filter = groupOptions and groupOptions.filter,
-			sort = groupOptions and groupOptions.sort,
+			_filter = groupOptions and groupOptions.filter,
+			_sort = groupOptions and groupOptions.sort,
 			entities = setmetatable({}, groupEntitiesMetatable),
 			has = setmetatable({}, groupHasMetatable),
 		}
@@ -330,7 +309,7 @@ function Pool:flush()
 		-- check if the entity belongs in each group and
 		-- add it to/remove it from the group as needed
 		for groupName, group in pairs(self.groups) do
-			if filterEntity(entity, group.filter) then
+			if filterEntity(entity, group._filter) then
 				if not group.has[entity] then
 					table.insert(group.entities, entity)
 					group.has[entity] = true
@@ -338,7 +317,7 @@ function Pool:flush()
 				end
 				-- if the group has a sort function, then we need to
 				-- sort the entities later
-				if type(group.sort) == 'function' then
+				if type(group._sort) == 'function' then
 					group._needsResort = true
 				end
 			elseif group.has[entity] then
@@ -348,7 +327,7 @@ function Pool:flush()
 					remove function that preserves the order of entities.
 					otherwise, we can go fast
 				]]
-				if group.sort then
+				if group._sort then
 					removeByValue(group.entities, entity)
 				else
 					fastRemoveByValue(group.entities, entity)
@@ -362,7 +341,7 @@ function Pool:flush()
 	-- re-sort groups
 	for _, group in pairs(self.groups) do
 		if group._needsResort then
-			table.sort(group.entities, group.sort)
+			table.sort(group.entities, group._sort)
 			group._needsResort = nil
 		end
 	end
@@ -386,7 +365,7 @@ function Pool:remove(f)
 					remove function that preserves the order of entities.
 					otherwise, we can go fast
 				]]
-				if group.sort then
+				if group._sort then
 					table.remove(group.entities, i)
 				else
 					fastRemove(group.entities, i)
