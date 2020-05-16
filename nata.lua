@@ -149,6 +149,28 @@ local function filterEntity(entity, filter)
 	return true
 end
 
+local groupHasMetatable = {
+	__call = function(has, e)
+		return has[e]
+	end,
+}
+
+local Group = {}
+Group.__index = Group
+
+function Group:__call()
+	return ipairs(self.entities)
+end
+
+local function newGroup(groupOptions)
+	return setmetatable({
+		filter = groupOptions and groupOptions.filter,
+		sort = groupOptions and groupOptions.sort,
+		entities = {},
+		has = setmetatable({}, groupHasMetatable),
+	}, Group)
+end
+
 --- Defines the behaviors of a system.
 --
 -- There's no constructor for SystemDefinitions. Rather, you simply
@@ -276,12 +298,7 @@ function Pool:_init(options, ...)
 	local groups = options.groups or {all = {}}
 	local systems = options.systems or {nata.oop 'all'}
 	for groupName, groupOptions in pairs(groups) do
-		self.groups[groupName] = {
-			filter = groupOptions.filter,
-			sort = groupOptions.sort,
-			entities = {},
-			has = {},
-		}
+		self.groups[groupName] = newGroup(groupOptions)
 	end
 	for _, systemDefinition in ipairs(systems) do
 		local system = setmetatable({

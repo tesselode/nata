@@ -10,8 +10,8 @@ function health:collide(e, other)
 		make sure both entities have health. otherwise, this
 		system shouldn't operate on them.
 	]]
-	if not self.pool 'health'.has[e] then return false end
-	if not self.pool 'health'.has[other] then return false end
+	if not self.pool 'health'.has(e) then return false end
+	if not self.pool 'health'.has(other) then return false end
 	-- bullets shouldn't damage each other
 	if e.isBullet and other.isBullet then return false end
 	-- two entities that are both good or both evil shouldn't damage each other

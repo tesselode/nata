@@ -7,12 +7,12 @@ local shoot = {}
 
 function shoot:add(groupName, e)
 	-- initialize entities that can shoot with a reload timer
-	if not self.pool 'shoot'.has[e] then return false end
+	if not self.pool 'shoot'.has(e) then return false end
 	e.shoot.reloadTimer = 0
 end
 
 function shoot:update(dt)
-	for _, e in ipairs(self.pool 'shoot'.entities) do
+	for _, e in self.pool 'shoot'() do
 		if e.shoot.reloadTimer > 0 then
 			e.shoot.reloadTimer = e.shoot.reloadTimer - dt
 		end
