@@ -12,7 +12,7 @@ end
 local defaultColor = {1, 1, 1}
 
 function physical:update(dt)
-	for i, e in ipairs(self.pool.groups.physical.entities) do
+	for i, e in ipairs(self.pool 'physical'.entities) do
 		-- apply velocity
 		if e.vx then
 			e.x = e.x + e.vx * dt
@@ -38,8 +38,8 @@ function physical:update(dt)
 		end
 
 		-- check for collisions
-		for j = i + 1, #self.pool.groups.physical.entities do
-			local other = self.pool.groups.physical.entities[j]
+		for j = i + 1, #self.pool 'physical'.entities do
+			local other = self.pool 'physical'.entities[j]
 			if isColliding(e, other) then
 				self.pool:emit('collide', e, other)
 				self.pool:emit('collide', other, e)
@@ -49,7 +49,7 @@ function physical:update(dt)
 end
 
 function physical:draw()
-	for _, e in ipairs(self.pool.groups.physical.entities) do
+	for _, e in ipairs(self.pool 'physical'.entities) do
 		love.graphics.setColor(e.color or defaultColor)
 		love.graphics.circle('fill', e.x, e.y, e.r, e.segments or 64)
 	end

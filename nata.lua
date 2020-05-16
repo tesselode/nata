@@ -210,14 +210,20 @@ end
 -- @tfield table entities
 
 --- A set of all the entities in the group.
--- @tfield table hasEntity
+-- @tfield table has
 -- @usage
--- print(pool.groups.physical.hasEntity[e]) -- prints "true" if the entity is in the "physical" group, or "nil" if not
+-- print(pool.groups.physical.has[e]) -- prints "true" if the entity is in the "physical" group, or "nil" if not
 
 --- Manages entities in a game world.
 -- @type Pool
 local Pool = {}
 Pool.__index = Pool
+
+function Pool:__call(groupName)
+	checkArgument(1, groupName, 'string')
+	checkCondition(self.groups[groupName], ("pool does not have a group named '%s'"):format(groupName))
+	return self.groups[groupName]
+end
 
 --- A dictionary of the @{Group}s in the pool.
 -- @tfield table groups
@@ -274,7 +280,7 @@ function Pool:_init(options, ...)
 			filter = groupOptions.filter,
 			sort = groupOptions.sort,
 			entities = {},
-			hasEntity = {},
+			has = {},
 		}
 	end
 	for _, systemDefinition in ipairs(systems) do
@@ -313,9 +319,9 @@ function Pool:flush()
 		-- add it to/remove it from the group as needed
 		for groupName, group in pairs(self.groups) do
 			if filterEntity(entity, group.filter) then
-				if not group.hasEntity[entity] then
+				if not group.has[entity] then
 					table.insert(group.entities, entity)
-					group.hasEntity[entity] = true
+					group.has[entity] = true
 					self:emit('add', groupName, entity)
 				end
 				-- if the group has a sort function, then we need to
@@ -323,7 +329,7 @@ function Pool:flush()
 				if type(group.sort) == 'function' then
 					group._needsResort = true
 				end
-			elseif group.hasEntity[entity] then
+			elseif group.has[entity] then
 				--[[
 					if the group has a sort function, or it's in
 					"preserve order" mode, then we should use the slower
@@ -335,7 +341,7 @@ function Pool:flush()
 				else
 					fastRemoveByValue(group.entities, entity)
 				end
-				group.hasEntity[entity] = nil
+				group.has[entity] = nil
 				self:emit('remove', groupName, entity)
 			end
 		end
@@ -373,7 +379,7 @@ function Pool:remove(f)
 				else
 					fastRemove(group.entities, i)
 				end
-				group.hasEntity[entity] = nil
+				group.has[entity] = nil
 			end
 		end
 	end

@@ -82,12 +82,12 @@ for _, entity in ipairs(pool.entities) do end
 for _, entity in ipairs(pool.groups.physical.entities) do end
 
 -- check if the pool has an entity
-print(pool.hasEntity[entity])
+print(pool.has[entity])
 
 -- check if a specific group has an entity
-print(pool.groups.physical.hasEntity[entity])
+print(pool.groups.physical.has[entity])
 ```
-You can access entities by reading from the `entities` and `hasEntity` tables directly. You can also sort the `entities` tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
+You can access entities by reading from the `entities` and `has` tables directly. You can also sort the `entities` tables manually if you want. It's not recommended to add or remove entities from these tables manually though; use `queue`/`flush`/`remove` for that.
 
 ## Using systems
 In an Entity Component System architecture, a **system** affects entities with certain qualities. In Nata, a system is just an object that receives events from a pool.

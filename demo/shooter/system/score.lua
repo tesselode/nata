@@ -10,7 +10,7 @@ function score:init()
 end
 
 function score:die(e)
-	if not self.pool.groups.score.hasEntity[e] then return false end
+	if not self.pool 'score'.has[e] then return false end
 	self.score = self.score + e.score
 end
 

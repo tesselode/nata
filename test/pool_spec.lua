@@ -67,9 +67,9 @@ describe('a pool', function()
 	end)
 
 	it('keeps a set of entities', function()
-		assert.is_true(pool.hasEntity[entity1])
-		assert.is_true(pool.hasEntity[entity2])
-		assert.is_true(pool.hasEntity[entity3])
+		assert.is_true(pool.has[entity1])
+		assert.is_true(pool.has[entity2])
+		assert.is_true(pool.has[entity3])
 	end)
 
 	-- groups
@@ -115,7 +115,7 @@ describe('a pool', function()
 	end)
 
 	it('removes entities from the set', function()
-		assert.is_nil(pool.hasEntity[entity2])
+		assert.is_nil(pool.has[entity2])
 	end)
 
 	it('removes entities from groups as well as the main pool', function()
