@@ -149,27 +149,17 @@ local function filterEntity(entity, filter)
 	return true
 end
 
-local groupHasMetatable = {
-	__call = function(has, e)
-		return has[e]
+local groupEntitiesMetatable = {
+	__call = function(entities)
+		return ipairs(entities)
 	end,
 }
 
-local Group = {}
-Group.__index = Group
-
-function Group:__call()
-	return ipairs(self.entities)
-end
-
-local function newGroup(groupOptions)
-	return setmetatable({
-		filter = groupOptions and groupOptions.filter,
-		sort = groupOptions and groupOptions.sort,
-		entities = {},
-		has = setmetatable({}, groupHasMetatable),
-	}, Group)
-end
+local groupHasMetatable = {
+	__call = function(has, entity)
+		return has[entity]
+	end,
+}
 
 --- Defines the behaviors of a system.
 --
@@ -298,7 +288,12 @@ function Pool:_init(options, ...)
 	local groups = options.groups or {all = {}}
 	local systems = options.systems or {nata.oop 'all'}
 	for groupName, groupOptions in pairs(groups) do
-		self.groups[groupName] = newGroup(groupOptions)
+		self.groups[groupName] = {
+			filter = groupOptions and groupOptions.filter,
+			sort = groupOptions and groupOptions.sort,
+			entities = setmetatable({}, groupEntitiesMetatable),
+			has = setmetatable({}, groupHasMetatable),
+		}
 	end
 	for _, systemDefinition in ipairs(systems) do
 		local system = setmetatable({
@@ -400,6 +395,24 @@ function Pool:remove(f)
 			end
 		end
 	end
+end
+
+function Pool:entities()
+	checkCondition(self.groups.all, "the pool does not have a group named 'all'\n\n"
+		.. "If you create a pool without specifying any groups, it will have "
+		.. "a group called 'all' by default. This function iterates over that group. "
+		.. "Since you have specified different groups, you'll probably want to use "
+		.. "pool(groupName).entities() to iterate over the entities in a specific group.")
+	return self 'all'.entities()
+end
+
+function Pool:has(entity)
+	checkCondition(self.groups.all, "the pool does not have a group named 'all'\n\n"
+		.. "If you create a pool without specifying any groups, it will have "
+		.. "a group called 'all' by default. This function checks for an entity in "
+		.. "that group. Since you have specified different groups, you'll probably want "
+		.. "to use pool(groupName).has(entity) to check if a specific group has an entity.")
+	return self 'all'.has(entity)
 end
 
 --- Registers a function to be called when an event is emitted.

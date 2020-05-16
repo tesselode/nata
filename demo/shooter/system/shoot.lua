@@ -12,7 +12,7 @@ function shoot:add(groupName, e)
 end
 
 function shoot:update(dt)
-	for _, e in self.pool 'shoot'() do
+	for _, e in self.pool 'shoot'.entities() do
 		if e.shoot.reloadTimer > 0 then
 			e.shoot.reloadTimer = e.shoot.reloadTimer - dt
 		end
