@@ -531,6 +531,8 @@ function nata.oop(group, options)
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
 			t._cache[event] = t._cache[event] or function(self, ...)
+				checkCondition(self.pool.groups[group], ("an OOP system was created for the group '%s', "
+					.. "but the pool does not have a group called '%s'"):format(group, group))
 				local shouldCallEvent = true
 				if include and not include[event] then shouldCallEvent = false end
 				if exclude and exclude[event] then shouldCallEvent = false end
