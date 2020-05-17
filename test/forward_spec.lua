@@ -1,11 +1,11 @@
 local nata = require 'nata'
 
-describe('an OOP system', function()
+describe('a forward system', function()
 	it('calls functions on the entities themselves', function()
 		local entityTestSpy = spy.new(function() end)
 		local pool = nata.new {
 			systems = {
-				nata.oop(),
+				nata.forward(),
 			},
 		}
 		pool:queue {
@@ -33,7 +33,7 @@ describe('an OOP system', function()
 		local entityTest3Spy = spy.new(function() end)
 		local pool = nata.new {
 			systems = {
-				nata.oop {include = {'test'}},
+				nata.forward {include = {'test'}},
 			},
 		}
 		pool:queue {
@@ -56,7 +56,7 @@ describe('an OOP system', function()
 		local entityTest3Spy = spy.new(function() end)
 		local pool = nata.new {
 			systems = {
-				nata.oop {exclude = {'test2', 'test3'}},
+				nata.forward {exclude = {'test2', 'test3'}},
 			},
 		}
 		pool:queue {
@@ -96,7 +96,7 @@ describe('an OOP system', function()
 				}
 			},
 			systems = {
-				nata.oop {group = 'cool'},
+				nata.forward {group = 'cool'},
 			}
 		}
 		pool:queue(entity1)

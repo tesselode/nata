@@ -19,7 +19,7 @@ local pool = nata.new {
 		events in the order they're listed.
 	]]
 	systems = {
-		nata.oop 'all',
+		nata.forward 'all',
 		require 'system.spawn',
 		require 'system.physical',
 		require 'system.shoot',

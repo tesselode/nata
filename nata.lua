@@ -265,7 +265,7 @@ function Pool:_init(options, ...)
 	self._events = {}
 	self.data = options.data or {}
 	local groups = options.groups or {all = {}}
-	local systems = options.systems or {nata.oop 'all'}
+	local systems = options.systems or {nata.forward 'all'}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
 			_filter = groupOptions and groupOptions.filter,
@@ -451,7 +451,7 @@ end
 ---
 -- @section end
 
-local function validateOopOptions(options)
+local function validateForwardOptions(options)
 	checkOptionalArgument(1, options, 'table')
 	if not options then return end
 	if options.include then
@@ -462,9 +462,9 @@ local function validateOopOptions(options)
 	end
 end
 
---- Defines the behavior of an OOP system.
--- @type OopOptions
--- @see nata.oop
+--- Defines the behavior of a forward system.
+-- @type ForwardOptions
+-- @see nata.forward
 
 --- A list of events to forward to entities. If not defined,
 -- the system will forward all events to entities (except
@@ -481,19 +481,19 @@ end
 ---
 -- @section end
 
---- Creates a new OOP system definition.
--- An OOP system, upon receiving an event, will call
+--- Creates a new forward system definition.
+-- A forward system, upon receiving an event, will call
 -- the function of the same name on each entity it monitors
 -- (if it exists). This facilitates a more traditional, OOP-style
 -- entity management, where you loop over a table of entities and
 -- call update and draw functions on them.
 -- @tparam string group the name of the group of entities to forward
 -- events to
--- @tparam[opt] OopOptions options how to set up the OOP system
--- @treturn SystemDefinition the new OOP system definition
-function nata.oop(group, options)
+-- @tparam[opt] ForwardOptions options how to set up the forward system
+-- @treturn SystemDefinition the new forward system definition
+function nata.forward(group, options)
 	checkArgument(1, group, 'string')
-	validateOopOptions(options)
+	validateForwardOptions(options)
 	local include, exclude
 	if options and options.include then
 		include = {}
@@ -510,7 +510,7 @@ function nata.oop(group, options)
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
 			t._cache[event] = t._cache[event] or function(self, ...)
-				checkCondition(self.pool.groups[group], ("an OOP system was created for the group '%s', "
+				checkCondition(self.pool.groups[group], ("a forward system was created for the group '%s', "
 					.. "but the pool does not have a group called '%s'"):format(group, group))
 				local shouldCallEvent = true
 				if include and not include[event] then shouldCallEvent = false end
@@ -562,7 +562,7 @@ end
 -- @tfield[opt={}] table groups
 
 --- A list of @{SystemDefinition}s for the pool to use.
--- @tfield[opt={nata.oop()}] table systems
+-- @tfield[opt={nata.forward()}] table systems
 
 --- An initial value to set @{Pool.data} to.
 -- @field[opt={}] data
