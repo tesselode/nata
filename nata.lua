@@ -260,6 +260,8 @@ function Pool:_init(options, ...)
 	-- a temporary table for entities that will be added to the pool
 	-- on the current flush (see Pool.flush for more details)
 	self._entitiesToFlush = {}
+	-- a queue for add/remove events
+	self._addRemoveEventQueue = {}
 	self.groups = {}
 	self._systems = {}
 	self._events = {}
@@ -313,7 +315,17 @@ function Pool:flush()
 				if not group.has[entity] then
 					table.insert(group.entities, entity)
 					group.has[entity] = true
-					self:emit('add', groupName, entity)
+					--[[
+						Queue add and remove events until after the entities
+						are added to/removed from all groups. This way,
+						by the time a system receives an add/remove event,
+						the entity will be in all of the groups it's supposed
+						to be in (i.e., it'll have accurate information about
+						the entity).
+					]]
+					table.insert(self._addRemoveEventQueue, 'add')
+					table.insert(self._addRemoveEventQueue, groupName)
+					table.insert(self._addRemoveEventQueue, entity)
 				end
 				-- if the group has a sort function, then we need to
 				-- sort the entities later
@@ -333,7 +345,9 @@ function Pool:flush()
 					fastRemoveByValue(group.entities, entity)
 				end
 				group.has[entity] = nil
-				self:emit('remove', groupName, entity)
+				table.insert(self._addRemoveEventQueue, 'remove')
+				table.insert(self._addRemoveEventQueue, groupName)
+				table.insert(self._addRemoveEventQueue, entity)
 			end
 		end
 		self._entitiesToFlush[i] = nil
@@ -344,6 +358,16 @@ function Pool:flush()
 			table.sort(group.entities, group._sort)
 			group._needsResort = nil
 		end
+	end
+	-- emit add/remove events
+	for i = 1, #self._addRemoveEventQueue, 3 do
+		local event = self._addRemoveEventQueue[i]
+		local groupName = self._addRemoveEventQueue[i + 1]
+		local entity = self._addRemoveEventQueue[i + 2]
+		self:emit(event, groupName, entity)
+		self._addRemoveEventQueue[i] = nil
+		self._addRemoveEventQueue[i + 1] = nil
+		self._addRemoveEventQueue[i + 2] = nil
 	end
 end
 
