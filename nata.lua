@@ -133,22 +133,6 @@ local function fastRemoveByValue(t, v)
 	end
 end
 
-local function entityHasKeys(entity, keys)
-	for _, key in ipairs(keys) do
-		if not entity[key] then return false end
-	end
-	return true
-end
-
-local function filterEntity(entity, filter)
-	if type(filter) == 'table' then
-		return entityHasKeys(entity, filter)
-	elseif type(filter) == 'function' then
-		return filter(entity)
-	end
-	return true
-end
-
 local groupEntitiesMetatable = {
 	__call = function(entities)
 		return ipairs(entities)
@@ -288,6 +272,47 @@ function Pool:_init(options, ...)
 	self:emit('init', ...)
 end
 
+-- checks to see if an entity belongs in a certain group
+function Pool:_belongsInGroup(group, entity)
+	-- if the group doesn't have a filter, then all entities belong
+	if not group._filter then return true end
+	-- if the group filter is a function, return the result of the function,
+	-- passing in the entity
+	if type(group._filter) == 'function' then
+		return group._filter(entity)
+	end
+	-- otherwise, check that the entity has each of the required components
+	for _, component in ipairs(group._filter) do
+		-- if the component is a string, there's some special behavior
+		if type(component) == 'string' then
+			local negated = false
+			-- if the component name starts with a "~", that means the entity
+			-- must NOT have that component
+			if component:sub(1, 1) == '~' then
+				negated = true
+				component = component:sub(2, -1)
+			end
+			local meetsCondition
+			-- if the component name starts with a "@", then it's actually the
+			-- name of a group that the entity must belong in
+			if component:sub(1, 1) == '@' then
+				local groupName = component:sub(2, -1)
+				local dependentGroup = self.groups[groupName]
+				meetsCondition = self:_belongsInGroup(dependentGroup, entity)
+			-- otherwise, just check if the entity has the key
+			else
+				meetsCondition = entity[component]
+			end
+			if negated then meetsCondition = not meetsCondition end
+			if not meetsCondition then return false end
+		-- otherwise, just check if the entity has the specified key
+		else
+			if not entity[component] then return false end
+		end
+	end
+	return true
+end
+
 --- Queues an entity to be added to the pool.
 -- @tparam table entity the entity to add
 -- @treturn table the queued entity
@@ -314,7 +339,7 @@ function Pool:flush()
 		-- check if the entity belongs in each group and
 		-- add it to/remove it from the group as needed
 		for groupName, group in pairs(self.groups) do
-			if filterEntity(entity, group._filter) then
+			if self:_belongsInGroup(group, entity) then
 				if not group.has[entity] then
 					table.insert(group.entities, entity)
 					group.has[entity] = true
