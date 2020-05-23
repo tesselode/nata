@@ -254,7 +254,10 @@ end
 
 function Pool:_init(options, ...)
 	self:_validateOptions(options)
-	options = options or {}
+	options = options or {
+		groups = {all = {}},
+		systems = {nata.forward 'all'},
+	}
 	-- entities that will be added to the pool on the next flush
 	self._queue = {}
 	-- a temporary table for entities that will be added to the pool
@@ -266,8 +269,8 @@ function Pool:_init(options, ...)
 	self._systems = {}
 	self._events = {}
 	self.data = options.data or {}
-	local groups = options.groups or {all = {}}
-	local systems = options.systems or {nata.forward 'all'}
+	local groups = options.groups or {}
+	local systems = options.systems or {}
 	for groupName, groupOptions in pairs(groups) do
 		self.groups[groupName] = {
 			_filter = groupOptions and groupOptions.filter,
