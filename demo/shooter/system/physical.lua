@@ -31,10 +31,10 @@ function physical:update(dt)
 
 		-- delete off-screen entities
 		if e.deleteWhenAboveScreen and e.y + e.r < 0 then
-			e.dead = true
+			self.pool:remove(e)
 		end
 		if e.deleteWhenBelowScreen and e.y - e.r > 600 then
-			e.dead = true
+			self.pool:remove(e)
 		end
 
 		-- check for collisions

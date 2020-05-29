@@ -127,12 +127,6 @@ local function fastRemove(t, i)
 	t[#t] = nil
 end
 
-local function fastRemoveByValue(t, v)
-	for i = #t, 1, -1 do
-		if t[i] == v then fastRemove(t, i) end
-	end
-end
-
 local groupEntitiesMetatable = {
 	__call = function(entities)
 		return ipairs(entities)
@@ -242,13 +236,7 @@ function Pool:_init(options, ...)
 		groups = {all = {}},
 		systems = {nata.forward 'all'},
 	}
-	-- entities that will be added to the pool on the next flush
-	self._queue = {}
-	-- a temporary table for entities that will be added to the pool
-	-- on the current flush (see Pool.flush for more details)
-	self._entitiesToFlush = {}
-	-- a queue for add/remove events
-	self._addRemoveEventQueue = {}
+	self._eventQueue = {}
 	self.groups = {}
 	self._systems = {}
 	self._events = {}
@@ -259,6 +247,8 @@ function Pool:_init(options, ...)
 		self.groups[groupName] = {
 			_filter = groupOptions and groupOptions.filter,
 			_sort = groupOptions and groupOptions.sort,
+			_addQueue = {},
+			_willRemove = {},
 			entities = setmetatable({}, groupEntitiesMetatable),
 			has = setmetatable({}, groupHasMetatable),
 		}
@@ -313,104 +303,32 @@ function Pool:_belongsInGroup(group, entity)
 	return true
 end
 
---- Queues an entity to be added to the pool.
--- @tparam table entity the entity to add
--- @treturn table the queued entity
 function Pool:queue(entity)
-	table.insert(self._queue, entity)
-	return entity
-end
-
---- Adds the queued entities to the pool. Entities are added
--- in the order they were queued.
-function Pool:flush()
-	--[[
-		Move the currently queued entities to a temporary
-		table. This way, if an add/remove event emission
-		leads to another entity being queued, it will be
-		saved for the next flush, rather than adding entities
-		to the table we're in the middle of iterating over,
-		which would lead to an array with holes and screw
-		everything up.
-	]]
-	self._queue, self._entitiesToFlush = self._entitiesToFlush, self._queue
-	for i = 1, #self._entitiesToFlush do
-		local entity = self._entitiesToFlush[i]
-		-- check if the entity belongs in each group and
-		-- add it to/remove it from the group as needed
-		for groupName, group in pairs(self.groups) do
-			if self:_belongsInGroup(group, entity) then
-				if not group.has[entity] then
-					table.insert(group.entities, entity)
-					group.has[entity] = true
-					--[[
-						Queue add and remove events until after the entities
-						are added to/removed from all groups. This way,
-						by the time a system receives an add/remove event,
-						the entity will be in all of the groups it's supposed
-						to be in (i.e., it'll have accurate information about
-						the entity).
-					]]
-					table.insert(self._addRemoveEventQueue, 'add')
-					table.insert(self._addRemoveEventQueue, groupName)
-					table.insert(self._addRemoveEventQueue, entity)
-				end
-				-- if the group has a sort function, then we need to
-				-- sort the entities later
-				if type(group._sort) == 'function' then
-					group._needsResort = true
-				end
-			elseif group.has[entity] then
-				--[[
-					if the group has a sort function, or it's in
-					"preserve order" mode, then we should use the slower
-					remove function that preserves the order of entities.
-					otherwise, we can go fast
-				]]
-				if group._sort then
-					removeByValue(group.entities, entity)
-				else
-					fastRemoveByValue(group.entities, entity)
-				end
-				group.has[entity] = nil
-				table.insert(self._addRemoveEventQueue, 'remove')
-				table.insert(self._addRemoveEventQueue, groupName)
-				table.insert(self._addRemoveEventQueue, entity)
-			end
-		end
-		self._entitiesToFlush[i] = nil
-	end
-	-- re-sort groups
 	for _, group in pairs(self.groups) do
-		if group._needsResort then
-			table.sort(group.entities, group._sort)
-			group._needsResort = nil
+		if self:_belongsInGroup(group, entity) then
+			if not group.has[entity] then
+				table.insert(group._addQueue, entity)
+			end
+		elseif group.has[entity] then
+			group._willRemove[entity] = true
 		end
-	end
-	-- emit add/remove events
-	for i = 1, #self._addRemoveEventQueue, 3 do
-		local event = self._addRemoveEventQueue[i]
-		local groupName = self._addRemoveEventQueue[i + 1]
-		local entity = self._addRemoveEventQueue[i + 2]
-		self:emit(event, groupName, entity)
-		self._addRemoveEventQueue[i] = nil
-		self._addRemoveEventQueue[i + 1] = nil
-		self._addRemoveEventQueue[i + 2] = nil
 	end
 end
 
---- Removes entities from the pool.
--- @tparam function f the condition upon which an entity should be
--- removed. The function should take an entity as the first argument
--- and return `true` if the entity should be removed.
-function Pool:remove(f)
-	checkArgument(1, f, 'function')
-	-- remove entities from groups
+function Pool:remove(entity)
+	for _, group in pairs(self.groups) do
+		if group.has[entity] then
+			group._willRemove[entity] = true
+		end
+	end
+end
+
+function Pool:flush()
 	for groupName, group in pairs(self.groups) do
+		-- remove entities
 		for i = #group.entities, 1, -1 do
 			local entity = group.entities[i]
-			if f(entity) then
-				self:emit('remove', groupName, entity)
+			if group._willRemove[entity] then
 				--[[
 					if the group has a sort function, or it's in
 					"preserve order" mode, then we should use the slower
@@ -423,8 +341,37 @@ function Pool:remove(f)
 					fastRemove(group.entities, i)
 				end
 				group.has[entity] = nil
+				group._willRemove[entity] = nil
+				table.insert(self._eventQueue, 'remove')
+				table.insert(self._eventQueue, groupName)
+				table.insert(self._eventQueue, entity)
 			end
 		end
+		-- add entities
+		if #group._addQueue > 0 then
+			for i = 1, #group._addQueue do
+				local entity = group._addQueue[i]
+				table.insert(group.entities, entity)
+				group.has[entity] = true
+				table.insert(self._eventQueue, 'add')
+				table.insert(self._eventQueue, groupName)
+				table.insert(self._eventQueue, entity)
+				group._addQueue[i] = nil
+			end
+			if type(group._sort) == 'function' then
+				table.sort(group.entities, group._sort)
+			end
+		end
+	end
+	-- emit add/remove events
+	for i = 1, #self._eventQueue, 3 do
+		local event = self._eventQueue[i]
+		local groupName = self._eventQueue[i + 1]
+		local entity = self._eventQueue[i + 2]
+		self:emit(event, groupName, entity)
+		self._eventQueue[i] = nil
+		self._eventQueue[i + 1] = nil
+		self._eventQueue[i + 2] = nil
 	end
 end
 

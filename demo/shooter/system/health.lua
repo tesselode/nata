@@ -20,7 +20,7 @@ function health:collide(e, other)
 	e.health = e.health - other.damage
 	if e.health <= 0 then
 		self.pool:emit('die', e) -- emit a "die" event that other systems can respond to
-		e.dead = true
+		self.pool:remove(e)
 	end
 end
 
