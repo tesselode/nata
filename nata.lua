@@ -221,8 +221,8 @@ function Pool:_validateOptions(options)
 			end
 			local filter = groupOptions.filter
 			if filter ~= nil then
-				checkCondition(type(filter) == 'table' or type(filter) == 'function',
-					string.format("filter for group '%s' must be a table or function", groupName))
+				checkCondition(type(filter) == 'string' or type(filter) == 'table' or type(filter) == 'function',
+					string.format("filter for group '%s' must be a string, table, or function", groupName))
 			end
 			local sort = groupOptions.sort
 			if sort ~= nil then
