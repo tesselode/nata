@@ -210,6 +210,15 @@ function Pool:_validateOptions(options)
 		for groupName, groupOptions in pairs(options.groups) do
 			checkCondition(type(groupOptions) == 'table',
 				string.format("options for group '$s' must be a table", groupName))
+			for k in pairs(groupOptions) do
+				checkCondition(k == 'filter' or k == 'sort', string.format(
+					"'%s' is not a valid property for group options. " ..
+					"valid properties are 'filter' and 'sort'.\n\n" ..
+					"if you meant to define components for this group, try " ..
+					"groupName = {filter = {...}}",
+					k
+				))
+			end
 			local filter = groupOptions.filter
 			if filter ~= nil then
 				checkCondition(type(filter) == 'table' or type(filter) == 'function',
