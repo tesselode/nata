@@ -9,7 +9,6 @@ local pool = nata.new {
 	]]
 	groups = {
 		all = {},
-		test = {'x'},
 		physical = {filter = {'x', 'y', 'r'}},
 		shoot = {filter = {'x', 'y', 'shoot'}},
 		health = {filter = {'x', 'y', 'r', 'health', 'damage'}},

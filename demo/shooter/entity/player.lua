@@ -2,7 +2,7 @@
 	unlike the other entities, the player has behavior unique to itself.
 	i could make systems just for the player's behavior, but that's
 	a little unnecessary. i set up a simple class system for the player
-	so it can have its own functions. the nata.oop system receives events
+	so it can have its own functions. the nata.forward system receives events
 	and calls functions of the same name on entities that have them.
 ]]
 
