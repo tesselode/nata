@@ -317,6 +317,7 @@ function Pool:queue(entity)
 			group._willRemove[entity] = true
 		end
 	end
+	return entity
 end
 
 function Pool:remove(entity)
