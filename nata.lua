@@ -478,10 +478,6 @@ end
 --- A list of events *not* to forward to entities.
 -- @tfield[opt] table exclude
 
---- The name of the group of entities to forward events to.
--- If not defined, the system will forward events to all entities.
--- @tfield string group
-
 ---
 -- @section end
 
