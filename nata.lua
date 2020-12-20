@@ -144,10 +144,10 @@ local groupHasMetatable = {
 -- There's no constructor for SystemDefinitions. Rather, you simply
 -- define a table with functions that correspond to events. These
 -- events can be named anything you like. Below are the built-in events
--- that the pool will automatically call.
+-- that the world will automatically call.
 -- @type SystemDefinition
 
---- Called when the pool is first created.
+--- Called when the world is first created.
 -- @function SystemDefinition:init
 -- @param ... additional arguments that were passed to `nata.new`.
 
@@ -161,16 +161,16 @@ local groupHasMetatable = {
 -- @string groupName the name of the group that the entity was removed from
 -- @tparam table e the entity that was removed
 
---- Responds to events in a pool.
+--- Responds to events in a world.
 --
--- Systems are not created directly. They're created by the @{Pool}
+-- Systems are not created directly. They're created by the @{World}
 -- according to the @{SystemDefinition}s passed to `nata.new`.
 -- Each system instance inherits all of the functions of its
 -- @{SystemDefinition}.
 -- @type System
 
---- The @{Pool} that this system is running on.
--- @tfield Pool pool
+--- The @{World} that this system is running on.
+-- @tfield World world
 
 --- Manages a subset of entities.
 -- @type Group
@@ -181,20 +181,20 @@ local groupHasMetatable = {
 --- A set of all the entities in the group.
 -- @tfield table has
 -- @usage
--- print(pool.groups.physical.has[e]) -- prints "true" if the entity is in the "physical" group, or "nil" if not
+-- print(world.groups.physical.has[e]) -- prints "true" if the entity is in the "physical" group, or "nil" if not
 
 --- Manages entities in a game world.
--- @type Pool
-local Pool = {}
-Pool.__index = Pool
+-- @type World
+local World = {}
+World.__index = World
 
-function Pool:__call(groupName)
+function World:__call(groupName)
 	checkArgument(1, groupName, 'string')
-	checkCondition(self.groups[groupName], ("pool does not have a group named '%s'"):format(groupName))
+	checkCondition(self.groups[groupName], ("world does not have a group named '%s'"):format(groupName))
 	return self.groups[groupName]
 end
 
---- A dictionary of the @{Group}s in the pool.
+--- A dictionary of the @{Group}s in the world.
 -- @tfield table groups
 
 --- A field containing any data you want.
@@ -202,7 +202,7 @@ end
 
 ---
 
-function Pool:_validateOptions(options)
+function World:_validateOptions(options)
 	checkOptionalArgument(1, options, 'table')
 	if not options then return end
 	if options.groups then
@@ -239,7 +239,7 @@ function Pool:_validateOptions(options)
 	end
 end
 
-function Pool:_init(options, ...)
+function World:_init(options, ...)
 	self:_validateOptions(options)
 	options = options or {
 		groups = {all = {}},
@@ -264,14 +264,14 @@ function Pool:_init(options, ...)
 	end
 	for _, systemDefinition in ipairs(systems) do
 		local system = setmetatable({
-			pool = self,
+			world = self,
 		}, {__index = systemDefinition})
 		table.insert(self._systems, system)
 	end
 	self:emit('init', ...)
 end
 
-function Pool:_filterEntity(entity, filter)
+function World:_filterEntity(entity, filter)
 	if type(filter) == 'function' then
 		return filter(entity)
 	end
@@ -307,7 +307,7 @@ function Pool:_filterEntity(entity, filter)
 	return true
 end
 
-function Pool:queue(entity)
+function World:queue(entity)
 	for _, group in pairs(self.groups) do
 		if self:_filterEntity(entity, group._filter) then
 			if not group.has[entity] then
@@ -320,7 +320,7 @@ function Pool:queue(entity)
 	return entity
 end
 
-function Pool:remove(entity)
+function World:remove(entity)
 	for _, group in pairs(self.groups) do
 		if group.has[entity] then
 			group._willRemove[entity] = true
@@ -328,7 +328,7 @@ function Pool:remove(entity)
 	end
 end
 
-function Pool:flush()
+function World:flush()
 	for groupName, group in pairs(self.groups) do
 		-- remove entities
 		for i = #group.entities, 1, -1 do
@@ -380,21 +380,21 @@ function Pool:flush()
 	end
 end
 
-function Pool:entities()
-	checkCondition(self.groups.all, "the pool does not have a group named 'all'\n\n"
-		.. "If you create a pool without specifying any groups, it will have "
+function World:entities()
+	checkCondition(self.groups.all, "the world does not have a group named 'all'\n\n"
+		.. "If you create a world without specifying any groups, it will have "
 		.. "a group called 'all' by default. This function iterates over that group. "
 		.. "Since you have specified different groups, you'll probably want to use "
-		.. "pool(groupName).entities() to iterate over the entities in a specific group.")
+		.. "world(groupName).entities() to iterate over the entities in a specific group.")
 	return self 'all'.entities()
 end
 
-function Pool:has(entity)
-	checkCondition(self.groups.all, "the pool does not have a group named 'all'\n\n"
-		.. "If you create a pool without specifying any groups, it will have "
+function World:has(entity)
+	checkCondition(self.groups.all, "the world does not have a group named 'all'\n\n"
+		.. "If you create a world without specifying any groups, it will have "
 		.. "a group called 'all' by default. This function checks for an entity in "
 		.. "that group. Since you have specified different groups, you'll probably want "
-		.. "to use pool(groupName).has(entity) to check if a specific group has an entity.")
+		.. "to use world(groupName).has(entity) to check if a specific group has an entity.")
 	return self 'all'.has(entity)
 end
 
@@ -402,7 +402,7 @@ end
 -- @string event the event to listen for
 -- @tparam function f the function to call
 -- @treturn function the function that was registered
-function Pool:on(event, f)
+function World:on(event, f)
 	checkCondition(event ~= nil, "event cannot be nil")
 	checkArgument(2, f, 'function')
 	self._events[event] = self._events[event] or {}
@@ -413,7 +413,7 @@ end
 --- Unregisters a function from an event.
 -- @string event the event to unregister the function from
 -- @tparam function f the function to unregister
-function Pool:off(event, f)
+function World:off(event, f)
 	checkCondition(event ~= nil, "event cannot be nil")
 	checkArgument(2, f, 'function')
 	if self._events[event] then
@@ -426,7 +426,7 @@ end
 -- to the event will be called as well.
 -- @string event the event to emit
 -- @param ... additional arguments to pass to the functions that are called
-function Pool:emit(event, ...)
+function World:emit(event, ...)
 	checkCondition(event ~= nil, "event cannot be nil")
 	for _, system in ipairs(self._systems) do
 		if type(system[event]) == 'function' then
@@ -498,13 +498,13 @@ function nata.forward(group, options)
 	return setmetatable({_cache = {}}, {
 		__index = function(t, event)
 			t._cache[event] = t._cache[event] or function(self, ...)
-				checkCondition(self.pool.groups[group], ("a forward system was created for the group '%s', "
-					.. "but the pool does not have a group called '%s'"):format(group, group))
+				checkCondition(self.world.groups[group], ("a forward system was created for the group '%s', "
+					.. "but the world does not have a group called '%s'"):format(group, group))
 				local shouldCallEvent = true
 				if include and not include[event] then shouldCallEvent = false end
 				if exclude and exclude[event] then shouldCallEvent = false end
 				if shouldCallEvent then
-					local entities = self.pool.groups[group].entities
+					local entities = self.world.groups[group].entities
 					for _, entity in ipairs(entities) do
 						if type(entity[event]) == 'function' then
 							entity[event](entity, ...)
@@ -541,31 +541,31 @@ end
 -- Lua's built-in `table.sort`.
 -- @tfield[opt] true|function sort
 
---- Defines the groups and systems for a @{Pool}.
--- @type PoolOptions
+--- Defines the groups and systems for a @{World}.
+-- @type WorldOptions
 
---- A dictionary of groups for the pool to have.
+--- A dictionary of groups for the world to have.
 -- Each key is the name of the group, and each value
 -- should be a @{GroupOptions} table.
 -- @tfield[opt={}] table groups
 
---- A list of @{SystemDefinition}s for the pool to use.
+--- A list of @{SystemDefinition}s for the world to use.
 -- @tfield[opt={nata.forward()}] table systems
 
---- An initial value to set @{Pool.data} to.
+--- An initial value to set @{World.data} to.
 -- @field[opt={}] data
 
 ---
 -- @section end
 
---- Creates a new @{Pool}.
--- @tparam[opt] PoolOptions options how to set up the pool
--- @param[opt] ... additional arguments to pass to the pool's init event
--- @treturn Pool the new pool
+--- Creates a new @{World}.
+-- @tparam[opt] WorldOptions options how to set up the world
+-- @param[opt] ... additional arguments to pass to the world's init event
+-- @treturn World the new world
 function nata.new(options, ...)
-	local pool = setmetatable({}, Pool)
-	pool:_init(options, ...)
-	return pool
+	local world = setmetatable({}, World)
+	world:_init(options, ...)
+	return world
 end
 
 return nata
