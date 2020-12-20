@@ -197,8 +197,8 @@ end
 --- A dictionary of the @{Group}s in the world.
 -- @tfield table groups
 
---- A field containing any data you want.
--- @field data
+--- A field containing any shared you want.
+-- @field shared
 
 ---
 
@@ -249,7 +249,7 @@ function World:_init(options, ...)
 	self.groups = {}
 	self._systems = {}
 	self._events = {}
-	self.data = options.data or {}
+	self.shared = options.shared or {}
 	local groups = options.groups or {}
 	local systems = options.systems or {}
 	for groupName, groupOptions in pairs(groups) do
@@ -552,8 +552,8 @@ end
 --- A list of @{SystemDefinition}s for the world to use.
 -- @tfield[opt={nata.forward()}] table systems
 
---- An initial value to set @{World.data} to.
--- @field[opt={}] data
+--- An initial value to set @{World.shared} to.
+-- @field[opt={}] shared
 
 ---
 -- @section end
