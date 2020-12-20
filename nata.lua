@@ -440,18 +440,6 @@ function Pool:emit(event, ...)
 	end
 end
 
---- Gets this pool's instance of a system.
--- @tparam SystemDefinition systemDefinition the system class to get the instance of
--- @treturn System the instance of the system running in this pool
-function Pool:getSystem(systemDefinition)
-	checkArgument(1, systemDefinition, 'table')
-	for _, system in ipairs(self._systems) do
-		if getmetatable(system).__index == systemDefinition then
-			return system
-		end
-	end
-end
-
 ---
 -- @section end
 
