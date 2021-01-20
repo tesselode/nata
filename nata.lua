@@ -108,6 +108,14 @@ local function checkOptionalArgument(argumentIndex, argument, ...)
 	checkArgument(argumentIndex, argument, ...)
 end
 
+local function arrayToSet(array)
+	local set = {}
+	for _, value in ipairs(array) do
+		set[value] = true
+	end
+	return set
+end
+
 local function removeByValue(t, v)
 	for i = #t, 1, -1 do
 		if t[i] == v then table.remove(t, i) end
@@ -442,6 +450,43 @@ end
 
 ---
 -- @section end
+
+local function validateReceiveAllOptions(options)
+	checkOptionalArgument(1, options, 'table')
+	if not options then return end
+	if options.include then
+		checkCondition(type(options.include) == 'table', "include must be a table")
+	end
+	if options.exclude then
+		checkCondition(type(options.exclude) == 'table', "exclude must be a table")
+	end
+end
+
+function nata.receiveAll(f, options)
+	checkArgument(1, f, 'function')
+	validateReceiveAllOptions(options)
+	local include = options and options.include and arrayToSet(options.include)
+	local exclude = options and options.exclude and arrayToSet(options.exclude)
+	return setmetatable({
+		_cache = {},
+	}, {
+		__index = function(t, event)
+			t._cache[event] = t._cache[event] or function(self, ...)
+				local shouldCallEvent = true
+				if include and not include[event] then
+					shouldCallEvent = false
+				end
+				if exclude and exclude[event] then
+					shouldCallEvent = false
+				end
+				if shouldCallEvent then
+					f(self, event, ...)
+				end
+			end
+			return t._cache[event]
+		end,
+	})
+end
 
 local function validateForwardOptions(options)
 	checkOptionalArgument(1, options, 'table')
