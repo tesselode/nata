@@ -489,14 +489,7 @@ function nata.receiveAll(f, options)
 end
 
 local function validateForwardOptions(options)
-	checkOptionalArgument(1, options, 'table')
-	if not options then return end
-	if options.include then
-		checkCondition(type(options.include) == 'table', "include must be a table")
-	end
-	if options.exclude then
-		checkCondition(type(options.exclude) == 'table', "exclude must be a table")
-	end
+	validateReceiveAllOptions(options)
 end
 
 --- Defines the behavior of a forward system.
@@ -527,39 +520,18 @@ end
 function nata.forward(group, options)
 	checkArgument(1, group, 'string')
 	validateForwardOptions(options)
-	local include, exclude
-	if options and options.include then
-		include = {}
-		for _, event in ipairs(options.include) do
-			include[event] = true
-		end
-	end
-	if options and options.exclude then
-		exclude = {}
-		for _, event in ipairs(options.exclude) do
-			exclude[event] = true
-		end
-	end
-	return setmetatable({_cache = {}}, {
-		__index = function(t, event)
-			t._cache[event] = t._cache[event] or function(self, ...)
-				checkCondition(self.world.groups[group], ("a forward system was created for the group '%s', "
-					.. "but the world does not have a group called '%s'"):format(group, group))
-				local shouldCallEvent = true
-				if include and not include[event] then shouldCallEvent = false end
-				if exclude and exclude[event] then shouldCallEvent = false end
-				if shouldCallEvent then
-					local entities = self.world.groups[group].entities
-					for _, entity in ipairs(entities) do
-						if type(entity[event]) == 'function' then
-							entity[event](entity, ...)
-						end
-					end
-				end
+	local system = nata.receiveAll(function(self, event, ...)
+		for _, entity in self.world(group).entities() do
+			if type(entity[event]) == 'function' then
+				entity[event](entity, ...)
 			end
-			return t._cache[event]
 		end
-	})
+	end, options)
+	function system:init()
+		checkCondition(self.world.groups[group], ("a forward system was created for the group '%s', "
+			.. "but the world does not have a group called '%s'"):format(group, group))
+	end
+	return system
 end
 
 --- Defines the filter and sort function for a @{Group}.
